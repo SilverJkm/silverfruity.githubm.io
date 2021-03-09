@@ -89,8 +89,7 @@
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://silverfruity.github.io/2021/03/09/OCRunner-StartCodingHotFix/Clang-LLVM.jpg">
 <meta property="og:image" content="https://silverfruity.github.io/2021/03/09/OCRunner-StartCodingHotFix/整体架构.001.jpeg">
-<meta property="og:image" content="https://silverfruity.github.io/2021/03/09/OCRunner-StartCodingHotFix/eval_ast.gif">
-<meta property="og:updated_time" content="2021-03-09T09:37:36.852Z">
+<meta property="og:updated_time" content="2021-03-09T10:28:33.347Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="OCRunner-从零教你写一个 iOS 热修复框架">
 <meta name="twitter:description" content="为什么要热修复在软件开发过程中，很难避免 BUG 的存在，尤其是对于一些达到一定规模的 App 因为协作模式错综复杂，就很容易带着问题上线。 一旦问题上线之后，问题就麻烦了，不仅需要重新打包、测试，而且还需要重新提交审核，而这种修复问题的方式往往是低效且漫长的。 因此，在开发一个 App 的过程中，稳定性的就变成了一个难题，唯一的原因就是不希望带着问题上线导致用户对 App 失去信任。 热修复就可">
@@ -361,7 +360,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  3.3k 字
+                  3k 字
                 </span>
               
 
@@ -377,7 +376,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  11 分钟
+                  10 分钟
                 </span>
               
             </div>
@@ -510,14 +509,7 @@
 <li>OCRunner（MangoFix），通过直接将类的目标方法的 IMP 直接替换为使用 libffi 注册的 methodIMP 函数，通过 class 和 SEL 从 OCRunner 的方法注册表中获取到 ORMethodImplementation ，将它解释执行，获取到结果后，再写入 ret 指针中。</li>
 </ul>
 <h4 id="项目整体图"><a href="#项目整体图" class="headerlink" title="项目整体图"></a>项目整体图</h4><img src="/2021/03/09/OCRunner-StartCodingHotFix/整体架构.001.jpeg">
-<h3 id="后续文章安排"><a href="#后续文章安排" class="headerlink" title="后续文章安排"></a>后续文章安排</h3><h4 id="1-实现一个简单版-OCRunner-未完成"><a href="#1-实现一个简单版-OCRunner-未完成" class="headerlink" title="1. 实现一个简单版 OCRunner - 未完成"></a>1. <a href>实现一个简单版 OCRunner - 未完成</a></h4><p>在正文开始前，我们先看看大佬给出的语法树解释执行.gif，OCRunner的核心解释执行部分也是如此。</p>
-<p><img src="./eval_ast.gif" alt></p>
-<p><a href="https://www.iteye.com/blog/rednaxelafx-492667" target="_blank" rel="noopener">本图出自: 虚拟机随谈（一）：解释器，树遍历解释器，基于栈与基于寄存器，大杂烩</a></p>
-<p>如果你让我仅仅只靠文字就能给你解释清楚 OCRunner 是怎么运行起来的，你们可能是在为难我小蒋，肚子里墨水真的没那么多啊，太难了😂。所以在这一小节，我给大家准备了一个简单版 OCRunner，希望大家能从这个例子中，真正知道它是如何运行的。</p>
-<p>希望你们看见项目中的 SingleEngine 类不要笑（哈哈哈），我只是想表达 单缸发动机 的意思 - _ -，我心爱的小摩托就是单缸拖拉机。</p>
-<p>作者快马加鞭打磨中…..</p>
-<h4 id="2-二进制补丁文件的实现-未完成"><a href="#2-二进制补丁文件的实现-未完成" class="headerlink" title="2. 二进制补丁文件的实现 - 未完成"></a>2. <a href>二进制补丁文件的实现 - 未完成</a></h4><p>作者快马加鞭完成中…..</p>
-
+<h3 id="后续文章"><a href="#后续文章" class="headerlink" title="后续文章"></a>后续文章</h3><h4 id="1-实现一个简单版-OCRunner"><a href="#1-实现一个简单版-OCRunner" class="headerlink" title="1. 实现一个简单版 OCRunner"></a>1. <a href="https://silverfruity.github.io/2021/03/09/OCRunner-SimpleOCRunner/">实现一个简单版 OCRunner</a></h4><h4 id="2-二进制补丁文件的实现"><a href="#2-二进制补丁文件的实现" class="headerlink" title="2. 二进制补丁文件的实现"></a>2. <a href="https://silverfruity.github.io/2021/03/09/OCRunner-PatchFile/">二进制补丁文件的实现</a></h4>
       
     </div>
     
@@ -718,7 +710,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么要热修复"><span class="nav-number">1.</span> <span class="nav-text">为什么要热修复</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#已有的开源方案"><span class="nav-number">2.</span> <span class="nav-text">已有的开源方案</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么要写-OCRunner"><span class="nav-number">3.</span> <span class="nav-text">为什么要写 OCRunner</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#整体架构的启发"><span class="nav-number">4.</span> <span class="nav-text">整体架构的启发</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#OCRunner"><span class="nav-number">5.</span> <span class="nav-text">OCRunner</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#优点"><span class="nav-number">5.1.</span> <span class="nav-text">优点:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#性能"><span class="nav-number">5.2.</span> <span class="nav-text">性能:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Hook-Objective-C-方法"><span class="nav-number">5.3.</span> <span class="nav-text">Hook Objective-C 方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#项目整体图"><span class="nav-number">5.4.</span> <span class="nav-text">项目整体图</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#后续文章安排"><span class="nav-number">6.</span> <span class="nav-text">后续文章安排</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-实现一个简单版-OCRunner-未完成"><span class="nav-number">6.1.</span> <span class="nav-text">1. 实现一个简单版 OCRunner - 未完成</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-二进制补丁文件的实现-未完成"><span class="nav-number">6.2.</span> <span class="nav-text">2. 二进制补丁文件的实现 - 未完成</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么要热修复"><span class="nav-number">1.</span> <span class="nav-text">为什么要热修复</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#已有的开源方案"><span class="nav-number">2.</span> <span class="nav-text">已有的开源方案</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么要写-OCRunner"><span class="nav-number">3.</span> <span class="nav-text">为什么要写 OCRunner</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#整体架构的启发"><span class="nav-number">4.</span> <span class="nav-text">整体架构的启发</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#OCRunner"><span class="nav-number">5.</span> <span class="nav-text">OCRunner</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#优点"><span class="nav-number">5.1.</span> <span class="nav-text">优点:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#性能"><span class="nav-number">5.2.</span> <span class="nav-text">性能:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Hook-Objective-C-方法"><span class="nav-number">5.3.</span> <span class="nav-text">Hook Objective-C 方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#项目整体图"><span class="nav-number">5.4.</span> <span class="nav-text">项目整体图</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#后续文章"><span class="nav-number">6.</span> <span class="nav-text">后续文章</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-实现一个简单版-OCRunner"><span class="nav-number">6.1.</span> <span class="nav-text">1. 实现一个简单版 OCRunner</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-二进制补丁文件的实现"><span class="nav-number">6.2.</span> <span class="nav-text">2. 二进制补丁文件的实现</span></a></li></ol></li></ol></div>
             
 
           </div>
