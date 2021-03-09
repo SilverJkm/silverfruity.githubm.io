@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans,en,default">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="hotfix,iOS,Objective-C,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="简介OCRunner开发补丁的工作流">
+<meta name="keywords" content="hotfix,iOS,Objective-C">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OCRunner：完全体的iOS热修复方案">
+<meta property="og:url" content="https://silverfruity.github.io/2020/09/04/OCRunner/index.html">
+<meta property="og:site_name" content="SilverFruity">
+<meta property="og:description" content="简介OCRunner开发补丁的工作流">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://silverfruity.github.io/2020/09/04/OCRunner/OCRunner_0.jpeg">
+<meta property="og:image" content="https://silverfruity.github.io/2020/09/04/OCRunner/OCRunner_2.jpeg">
+<meta property="og:image" content="https://silverfruity.github.io/2020/09/04/OCRunner/OCRunner_1.jpeg">
+<meta property="og:updated_time" content="2021-03-09T09:15:00.739Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="OCRunner：完全体的iOS热修复方案">
+<meta name="twitter:description" content="简介OCRunner开发补丁的工作流">
+<meta name="twitter:image" content="https://silverfruity.github.io/2020/09/04/OCRunner/OCRunner_0.jpeg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://silverfruity.github.io/2020/09/04/OCRunner/">
+
+
+
+
+
+  <title>OCRunner：完全体的iOS热修复方案 | SilverFruity</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">SilverFruity</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description"></h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://silverfruity.github.io/2020/09/04/OCRunner/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Jiang">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SilverFruity">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">OCRunner：完全体的iOS热修复方案</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-09-04T10:57:49+08:00">
+                2020-09-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OpenSource/" itemprop="url" rel="index">
+                    <span itemprop="name">OpenSource</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2020/09/04/OCRunner/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2020/09/04/OCRunner/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2020/09/04/OCRunner/" class="leancloud_visitors" data-flag-title="OCRunner：完全体的iOS热修复方案">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  1.5k 字
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  6 分钟
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><h3 id="OCRunner开发补丁的工作流"><a href="#OCRunner开发补丁的工作流" class="headerlink" title="OCRunner开发补丁的工作流"></a><a href="https://github.com/SilverFruity/OCRunner" target="_blank" rel="noopener">OCRunner</a>开发补丁的工作流</h3><img src="/2020/09/04/OCRunner/OCRunner_0.jpeg">
+<a id="more"></a>
+<h3 id="初衷"><a href="#初衷" class="headerlink" title="初衷"></a>初衷</h3><p>为了能够实现一篇文章的思路：Objective-C源码 -&gt; 二进制补丁文件 -&gt;热更新（具体是哪篇我忘了）。当时刚好开始了<a href="https://github.com/SilverFruity/oc2mango" target="_blank" rel="noopener">oc2mango</a>翻译器的漫漫长路（顺带为了学习编译原理，嘻嘻），等基本完成以后，就开始肝OCRunner：完全兼容struct，enum，系统C函数调用，魔改libffi，生成补丁文件等，尽可能兼容Objective-C，为了做一个直接运行OC的快乐人。</p>
+<h3 id="各方职责"><a href="#各方职责" class="headerlink" title="各方职责"></a>各方职责</h3><ul>
+<li><a href="https://github.com/SilverFruity/oc2mango/tree/master/oc2mangoLib" target="_blank" rel="noopener">oc2mangoLib</a>相当于一个简单的编译器，负责生成语法树</li>
+<li><a href="https://github.com/SilverFruity/oc2mango/tree/master/oc2mangoLib/PatchFile" target="_blank" rel="noopener">ORPatchFile</a>负责将语法树序列化、反序列化和版本判断</li>
+<li><a href="https://github.com/SilverFruity/oc2mango/tree/master/PatchGenerator" target="_blank" rel="noopener">PatchGenerator</a>负责将oc2mangoLib和ORPatchFile的功能整合（以上工具都在<a href="https://github.com/SilverFruity/oc2mango" target="_blank" rel="noopener">oc2mango</a>项目下）</li>
+<li><a href="https://github.com/SilverFruity/OCRunner" target="_blank" rel="noopener">OCRunner</a>负责解释执行语法树</li>
+</ul>
+<h3 id="与其他库的区别"><a href="#与其他库的区别" class="headerlink" title="与其他库的区别"></a>与其他库的区别</h3><ul>
+<li><p>下发二进制补丁文件。增加安全性，减小补丁大小，省去词法分析与语法分析，优化启动时间，可在PatchGenerator阶段进行优化</p>
+</li>
+<li><p>自定义的Arm64 ABI （可以不使用libffi）</p>
+</li>
+<li><p>完整的Objective-C语法支持，除去预编译和部分语法</p>
+</li>
+</ul>
+<h2 id="本地使用OCRunner运行补丁"><a href="#本地使用OCRunner运行补丁" class="headerlink" title="本地使用OCRunner运行补丁"></a>本地使用OCRunner运行补丁</h2><p><a href="https://github.com/SilverFruity/OCRunner/tree/master/OCRunnerDemo" target="_blank" rel="noopener">OCRunnerDemo</a>可以作为整个流程的参照.</p>
+<h3 id="Cocoapods导入OCRunner"><a href="#Cocoapods导入OCRunner" class="headerlink" title="Cocoapods导入OCRunner"></a>Cocoapods导入OCRunner</h3><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pod <span class="string">'OCRunner'</span>      <span class="comment">#支持所有架构，包含libffi.a</span></span><br><span class="line"><span class="comment"># 或者</span></span><br><span class="line">pod <span class="string">'OCRunnerArm64'</span> <span class="comment">#仅支持 arm64和arm64e，没有libffi.a</span></span><br></pre></td></tr></table></figure>
+<h3 id="下载-PatchGenerator"><a href="#下载-PatchGenerator" class="headerlink" title="下载 PatchGenerator"></a>下载 <a href="https://github.com/SilverFruity/oc2mango/releases" target="_blank" rel="noopener">PatchGenerator</a></h3><p>解压PatchGenerato.zip，然后将PatchGenerator保存到/usr/bin/或项目目录下.</p>
+<h3 id="添加PatchGenerator的-Run-Script"><a href="#添加PatchGenerator的-Run-Script" class="headerlink" title="添加PatchGenerator的 Run Script"></a>添加PatchGenerator的 <code>Run Script</code></h3><ol>
+<li><p><strong>Project Setting</strong> -&gt; <strong>Build Phases</strong> -&gt; 左上角的 <code>+</code> -&gt; <code>New Run Script Phase</code></p>
+</li>
+<li><p>PatchGenerator的路径 <strong>-files</strong> Objective-C源文件列表或者文件夹 <strong>-refs</strong> Objective-C头文件列表或者文件夹 <strong>-output</strong> 输出补丁保存的位置</p>
+</li>
+<li><p>比如OCRunnerDemo中的<code>Run Script</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash">SRCROOT/OCRunnerDemo/PatchGenerator -files <span class="variable">$SRCROOT</span>/OCRunnerDemo/ViewController1 -refs  <span class="variable">$SRCROOT</span>/OCRunnerDemo/Scripts.bundle -output <span class="variable">$SRCROOT</span>/OCRunnerDemo/binarypatch</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="开发环境下-运行补丁"><a href="#开发环境下-运行补丁" class="headerlink" title="开发环境下: 运行补丁"></a>开发环境下: 运行补丁</h3><ol>
+<li><p>将生成的补丁文件作为资源文件添加到项目中</p>
+</li>
+<li><p>Appdelegate.m</p>
+</li>
+</ol>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="built_in">BOOL</span>)application:(<span class="built_in">UIApplication</span> *)application didFinishLaunchingWithOptions:(<span class="built_in">NSDictionary</span> *)launchOptions &#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> DEBUG</span></span><br><span class="line">    <span class="built_in">NSString</span> *patchFilePath = [[<span class="built_in">NSBundle</span> mainBundle] pathForResource:<span class="string">@"PatchFileName"</span> ofType:<span class="literal">nil</span>];</span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span></span></span><br><span class="line">   <span class="comment">// download from server</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">    [ORInterpreter excuteBinaryPatchFile:patchFilePath];</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">YES</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>每次修改文件，记得Command+B，调用Run Scrip，重新生成补丁文件.</li>
+</ol>
+<h3 id="正式环境"><a href="#正式环境" class="headerlink" title="正式环境"></a>正式环境</h3><ol>
+<li>将补丁上传到服务器</li>
+<li>App中下载补丁文件并保存到本地</li>
+<li>使用<strong>[ORInterpreter excuteBinaryPatchFile:PatchFilePath]</strong> 执行补丁</li>
+</ol>
+<h2 id="使用介绍"><a href="#使用介绍" class="headerlink" title="使用介绍"></a>使用介绍</h2><h3 id="引入结构体、枚举、typedef"><a href="#引入结构体、枚举、typedef" class="headerlink" title="引入结构体、枚举、typedef"></a>引入结构体、枚举、typedef</h3><p>可以通过修改<strong>OCRunnerDemo</strong>中的<strong>ViewController1</strong>，运行以下代码.</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 将添加一个名为dispatch_once_t的新类型</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="built_in">NSInteger</span> <span class="built_in">dispatch_once_t</span>;</span><br><span class="line"><span class="comment">// link NSLog</span></span><br><span class="line"><span class="keyword">void</span> <span class="built_in">NSLog</span>(<span class="built_in">NSString</span> *format, ...);</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">enum</span>: <span class="built_in">NSUInteger</span>&#123;</span><br><span class="line">    <span class="built_in">UIControlEventTouchDown</span>                                         = <span class="number">1</span> &lt;&lt;  <span class="number">0</span>,</span><br><span class="line">    <span class="built_in">UIControlEventTouchDownRepeat</span>                                   = <span class="number">1</span> &lt;&lt;  <span class="number">1</span>,</span><br><span class="line">    <span class="built_in">UIControlEventTouchDragInside</span>                                   = <span class="number">1</span> &lt;&lt;  <span class="number">2</span>,</span><br><span class="line">    <span class="built_in">UIControlEventTouchDragOutside</span>                                  = <span class="number">1</span> &lt;&lt;  <span class="number">3</span>,</span><br><span class="line">    <span class="built_in">UIControlEventTouchDragEnter</span>                                    = <span class="number">1</span> &lt;&lt;  <span class="number">4</span></span><br><span class="line">&#125;<span class="built_in">UIControlEvents</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> main()&#123;</span><br><span class="line">    <span class="built_in">UIControlEvents</span> events = <span class="built_in">UIControlEventTouchDown</span> | <span class="built_in">UIControlEventTouchDownRepeat</span>;</span><br><span class="line">    <span class="keyword">if</span> (events &amp; <span class="built_in">UIControlEventTouchDown</span>)&#123;</span><br><span class="line">        <span class="built_in">NSLog</span>(<span class="string">@"UIControlEventTouchDown"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"enum test: %lu"</span>,events);</span><br><span class="line">    <span class="keyword">return</span> events;</span><br><span class="line">&#125;</span><br><span class="line">main();</span><br></pre></td></tr></table></figure>
+<p><strong>Tips:</strong> </p>
+<p>推荐新建一个文件来放置以上代码，类似于OCRunnerDemo中的UIKitRefrence和GCDRefrence文件，然后使用<strong>PatchGenerator</strong>以<strong>-links</strong>的形式加入补丁生成。作者想偷偷懒，不想再去CV了，头文件太多了😭.</p>
+<h3 id="使用系统内置C函数"><a href="#使用系统内置C函数" class="headerlink" title="使用系统内置C函数"></a>使用系统内置C函数</h3><figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//you only need to add the C function declaration in Script.</span></span><br><span class="line"><span class="comment">//link NSLog</span></span><br><span class="line"><span class="keyword">void</span> <span class="built_in">NSLog</span>(<span class="built_in">NSString</span> *format, ...);</span><br><span class="line"></span><br><span class="line"><span class="comment">//then you can use it in Scrtips.</span></span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"test for link function %@"</span>, <span class="string">@"xixi"</span>);</span><br></pre></td></tr></table></figure>
+<p>当你运行以上代码时. OCRunner将会使用<code>ORSearchedFunction</code> 搜索函数的指针. </p>
+<p>这个过程的核心实现是 <code>SymbolSearch</code> (修改自<code>fishhook</code>).</p>
+<p>如果搜索到的结果是NULL，OCRunner将会自动在控制台打印如下信息:</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">|----------------------------------------------|</span><br><span class="line">|❕you need add ⬇️ code <span class="keyword">in</span> the application file |</span><br><span class="line">|----------------------------------------------|</span><br><span class="line">[ORSystemFunctionTable reg:<span class="string">@"dispatch_source_set_timer"</span> pointer:&amp;dispatch_source_set_timer];</span><br></pre></td></tr></table></figure>
+<h3 id="修复OC对象（类）方法、添加属性"><a href="#修复OC对象（类）方法、添加属性" class="headerlink" title="修复OC对象（类）方法、添加属性"></a>修复OC对象（类）方法、添加属性</h3><blockquote>
+<p>小天才英语学习机，不会哪里点哪里</p>
+</blockquote>
+<p>想修复哪个方法，将改方法实现即可，不用实现其他方法.</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">@interface</span> <span class="title">ORTestClassProperty</span>:<span class="title">NSObject</span></span></span><br><span class="line"><span class="keyword">@property</span> (<span class="keyword">nonatomic</span>,<span class="keyword">copy</span>)<span class="built_in">NSString</span> *strTypeProperty;</span><br><span class="line"><span class="keyword">@property</span> (<span class="keyword">nonatomic</span>,<span class="keyword">weak</span>)<span class="keyword">id</span> weakObjectProperty;</span><br><span class="line"><span class="keyword">@end</span></span><br><span class="line"><span class="class"><span class="keyword">@implementation</span> <span class="title">ORTestClassProperty</span></span></span><br><span class="line">- (<span class="keyword">void</span>)otherMethod&#123;</span><br><span class="line">    <span class="keyword">self</span>.strTypeProperty = <span class="string">@"Mango"</span>;</span><br><span class="line">&#125;</span><br><span class="line">- (<span class="built_in">NSString</span> *)testObjectPropertyTest&#123;</span><br><span class="line">  	[<span class="keyword">self</span> ORGtestObjectPropertyTest] <span class="comment">//方法名前加'ORG'调用原方法</span></span><br><span class="line">    [<span class="keyword">self</span> otherMethod];</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">self</span>.strTypeProperty;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">@end</span></span><br></pre></td></tr></table></figure>
+<h3 id="Block使用、解决循环引用"><a href="#Block使用、解决循环引用" class="headerlink" title="Block使用、解决循环引用"></a>Block使用、解决循环引用</h3><figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 用于解决循环引用</span></span><br><span class="line">__<span class="keyword">weak</span> <span class="keyword">id</span> object = [<span class="built_in">NSObject</span> new];</span><br><span class="line"><span class="comment">// 最简block声明</span></span><br><span class="line"><span class="keyword">void</span> (^a)(<span class="keyword">void</span>) = ^&#123;</span><br><span class="line">    <span class="keyword">int</span> b = <span class="number">0</span>;</span><br><span class="line">&#125;;</span><br><span class="line">a();</span><br></pre></td></tr></table></figure>
+<h3 id="使用GCD"><a href="#使用GCD" class="headerlink" title="使用GCD"></a>使用GCD</h3><p>本质就是 <strong>使用系统内置C函数</strong>，通过<strong>GCDRefrences</strong>文件添加，GCD相关的函数声明以及typedef皆在其中.</p>
+<p>比如:</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// link dispatch_sync</span></span><br><span class="line"><span class="keyword">void</span> <span class="built_in">dispatch_sync</span>(<span class="built_in">dispatch_queue_t</span> queue, dispatch_block_t block);</span><br><span class="line"><span class="keyword">void</span> main()&#123;</span><br><span class="line">  <span class="built_in">dispatch_queue_t</span> queue = dispatch_queue_create(<span class="string">"com.plliang19.mango"</span>,DISPATCH_QUEUE_SERIAL);</span><br><span class="line">	<span class="built_in">dispatch_async</span>(queue, ^&#123;</span><br><span class="line">   	completion(<span class="string">@"success"</span>);</span><br><span class="line">	&#125;);</span><br><span class="line">&#125;</span><br><span class="line">main();</span><br></pre></td></tr></table></figure>
+<h3 id="使用内联函数、预编译函数"><a href="#使用内联函数、预编译函数" class="headerlink" title="使用内联函数、预编译函数"></a>使用内联函数、预编译函数</h3><figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 内联函数：在补丁中，添加一个全局函数中即可，比如UIKitRefrences中的CGRectMake</span></span><br><span class="line"><span class="built_in">CGRect</span> <span class="built_in">CGRectMake</span>(<span class="built_in">CGFloat</span> x, <span class="built_in">CGFloat</span> y, <span class="built_in">CGFloat</span> width, <span class="built_in">CGFloat</span> height)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="built_in">CGRect</span> rect;</span><br><span class="line">  rect.origin.x = x; rect.origin.y = y;</span><br><span class="line">  rect.size.width = width; rect.size.height = height;</span><br><span class="line">  <span class="keyword">return</span> rect;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 预编译函数：需要在App中预埋</span></span><br><span class="line">[[MFScopeChain top] setValue:[MFValue valueWithBlock:^<span class="keyword">void</span>(<span class="built_in">dispatch_once_t</span> *onceTokenPtr,</span><br><span class="line">                                                                  dispatch_block_t _Nullable handler)&#123;</span><br><span class="line">        <span class="built_in">dispatch_once</span>(onceTokenPtr,handler);</span><br><span class="line">    &#125;] withIndentifier:<span class="string">@"dispatch_once"</span>];</span><br></pre></td></tr></table></figure>
+<h3 id="如何确定补丁中是否包含源文件"><a href="#如何确定补丁中是否包含源文件" class="headerlink" title="如何确定补丁中是否包含源文件"></a>如何确定补丁中是否包含源文件</h3><img src="/2020/09/04/OCRunner/OCRunner_2.jpeg">
+<p>查看Run Script打印的 <strong>InputFiles</strong> 中是否包含源文件.</p>
+<h2 id="性能测试"><a href="#性能测试" class="headerlink" title="性能测试"></a>性能测试</h2><img src="/2020/09/04/OCRunner/OCRunner_1.jpeg">
+<p>根据已知数据，OCRunner的补丁加载速度是JSPatch的20倍+，随着补丁大小的不断增加，这个倍数会不断增加。运行速度和内存占用与MangoFix差距不大。内存占用方面应该会更优，OCRunner中MFValue的值采用malloc来复制值，不会有多个类型的实例变量。</p>
+<h2 id="目前的问题"><a href="#目前的问题" class="headerlink" title="目前的问题"></a>目前的问题</h2><ol>
+<li>指针与乘号识别冲突问题，衍生的问题：类型转换等等</li>
+<li>不支持static、inline函数声明</li>
+<li>不支持C数组声明:  type a[]和type a[2]，以及 value = { 0 , 0 , 0 , 0 } 这种表达式</li>
+<li>不支持 ‘-&gt;’ 操作符号</li>
+<li>不支持C函数替换</li>
+</ol>
+<h2 id="支持语法"><a href="#支持语法" class="headerlink" title="支持语法"></a>支持语法</h2><ol>
+<li>类声明与实现，支持分类写法</li>
+<li>Protocol</li>
+<li>Block语法</li>
+<li>结构体、枚举、typedef</li>
+<li>使用函数声明，链接系统函数指针</li>
+<li>全局函数</li>
+<li>多参数调用（方法和函数）</li>
+<li><strong>*</strong>、<strong>&amp;</strong>  (指针操作)</li>
+<li>变量static关键字</li>
+<li>NSArray: @[value1, value2]，NSDictionary: @{ key: value },  NSNumer:  @(value)</li>
+<li>NSArray取值和NSDictionary取值和赋值语法，id value = a[var];  a[var] = value;</li>
+<li><a href="https://baike.baidu.com/item/%E8%BF%90%E7%AE%97%E7%AC%A6%E4%BC%98%E5%85%88%E7%BA%A7/4752611?fr=aladdin" target="_blank" rel="noopener">运算符，除去’-&gt;’皆已实现</a></li>
+</ol>
+<p>… 等</p>
+<p>想到了再加吧😂</p>
+<h2 id="目标"><a href="#目标" class="headerlink" title="目标"></a>目标</h2><ul>
+<li>完善当前的语法支持</li>
+<li>更多的单元测试覆盖（尽管目前显示是84%）</li>
+<li>PatchGenerator阶段进行优化：未被调用的函数声明、结构体、枚举等，不会在补丁中，减少包大小以及加载时间等</li>
+<li>尝试Swift热更新（新建库吧，哈哈）</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+      <div>
+        <ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者：</strong>
+    Jiang
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://silverfruity.github.io/2020/09/04/OCRunner/" title="OCRunner：完全体的iOS热修复方案">https://silverfruity.github.io/2020/09/04/OCRunner/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>
+    本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/" rel="external nofollow" target="_blank">CC BY-NC-SA 3.0</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+
+      </div>
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/hotfix/" rel="tag"># hotfix</a>
+          
+            <a href="/tags/iOS/" rel="tag"># iOS</a>
+          
+            <a href="/tags/Objective-C/" rel="tag"># Objective-C</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/07/18/libffi系列/libffi1/" rel="next" title="iOS libffi详解（1）- 使用方法">
+                <i class="fa fa-chevron-left"></i> iOS libffi详解（1）- 使用方法
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/03/09/OCRunner-StartCodingHotFix/" rel="prev" title="OCRunner-从零教你写一个 iOS 热修复框架">
+                OCRunner-从零教你写一个 iOS 热修复框架 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.png" alt="Jiang">
+            
+              <p class="site-author-name" itemprop="name">Jiang</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#简介"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#OCRunner开发补丁的工作流"><span class="nav-number">1.1.</span> <span class="nav-text">OCRunner开发补丁的工作流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#初衷"><span class="nav-number">1.2.</span> <span class="nav-text">初衷</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#各方职责"><span class="nav-number">1.3.</span> <span class="nav-text">各方职责</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#与其他库的区别"><span class="nav-number">1.4.</span> <span class="nav-text">与其他库的区别</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#本地使用OCRunner运行补丁"><span class="nav-number">2.</span> <span class="nav-text">本地使用OCRunner运行补丁</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Cocoapods导入OCRunner"><span class="nav-number">2.1.</span> <span class="nav-text">Cocoapods导入OCRunner</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#下载-PatchGenerator"><span class="nav-number">2.2.</span> <span class="nav-text">下载 PatchGenerator</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#添加PatchGenerator的-Run-Script"><span class="nav-number">2.3.</span> <span class="nav-text">添加PatchGenerator的 Run Script</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#开发环境下-运行补丁"><span class="nav-number">2.4.</span> <span class="nav-text">开发环境下: 运行补丁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#正式环境"><span class="nav-number">2.5.</span> <span class="nav-text">正式环境</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用介绍"><span class="nav-number">3.</span> <span class="nav-text">使用介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#引入结构体、枚举、typedef"><span class="nav-number">3.1.</span> <span class="nav-text">引入结构体、枚举、typedef</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用系统内置C函数"><span class="nav-number">3.2.</span> <span class="nav-text">使用系统内置C函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#修复OC对象（类）方法、添加属性"><span class="nav-number">3.3.</span> <span class="nav-text">修复OC对象（类）方法、添加属性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Block使用、解决循环引用"><span class="nav-number">3.4.</span> <span class="nav-text">Block使用、解决循环引用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用GCD"><span class="nav-number">3.5.</span> <span class="nav-text">使用GCD</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用内联函数、预编译函数"><span class="nav-number">3.6.</span> <span class="nav-text">使用内联函数、预编译函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何确定补丁中是否包含源文件"><span class="nav-number">3.7.</span> <span class="nav-text">如何确定补丁中是否包含源文件</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#性能测试"><span class="nav-number">4.</span> <span class="nav-text">性能测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#目前的问题"><span class="nav-number">5.</span> <span class="nav-text">目前的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#支持语法"><span class="nav-number">6.</span> <span class="nav-text">支持语法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#目标"><span class="nav-number">7.</span> <span class="nav-text">目标</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2019 &mdash; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jiang</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: false,
+        notify: false,
+        appId: 'VS3cQiJ0SvKu8yffcUhucXVa-gzGzoHsz',
+        appKey: '7IsQXOyh5G5NhvJGb0gCQvtl',
+        placeholder: 'Emmm.',
+        avatar:'monsterid',
+        meta:guest,
+        pageSize:'10' || 10,
+        visitor: true
+    });
+  </script>
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

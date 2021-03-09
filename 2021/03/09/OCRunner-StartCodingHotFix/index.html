@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans,en,default">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="hotfix,iOS,Objective-C,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="为什么要热修复在软件开发过程中，很难避免 BUG 的存在，尤其是对于一些达到一定规模的 App 因为协作模式错综复杂，就很容易带着问题上线。 一旦问题上线之后，问题就麻烦了，不仅需要重新打包、测试，而且还需要重新提交审核，而这种修复问题的方式往往是低效且漫长的。 因此，在开发一个 App 的过程中，稳定性的就变成了一个难题，唯一的原因就是不希望带着问题上线导致用户对 App 失去信任。 热修复就可">
+<meta name="keywords" content="hotfix,iOS,Objective-C">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OCRunner-从零教你写一个 iOS 热修复框架">
+<meta property="og:url" content="https://silverfruity.github.io/2021/03/09/OCRunner-StartCodingHotFix/index.html">
+<meta property="og:site_name" content="SilverFruity">
+<meta property="og:description" content="为什么要热修复在软件开发过程中，很难避免 BUG 的存在，尤其是对于一些达到一定规模的 App 因为协作模式错综复杂，就很容易带着问题上线。 一旦问题上线之后，问题就麻烦了，不仅需要重新打包、测试，而且还需要重新提交审核，而这种修复问题的方式往往是低效且漫长的。 因此，在开发一个 App 的过程中，稳定性的就变成了一个难题，唯一的原因就是不希望带着问题上线导致用户对 App 失去信任。 热修复就可">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://silverfruity.github.io/2021/03/09/OCRunner-StartCodingHotFix/Clang-LLVM.jpg">
+<meta property="og:image" content="https://silverfruity.github.io/2021/03/09/OCRunner-StartCodingHotFix/整体架构.001.jpeg">
+<meta property="og:image" content="https://silverfruity.github.io/2021/03/09/OCRunner-StartCodingHotFix/eval_ast.gif">
+<meta property="og:updated_time" content="2021-03-09T09:37:36.852Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="OCRunner-从零教你写一个 iOS 热修复框架">
+<meta name="twitter:description" content="为什么要热修复在软件开发过程中，很难避免 BUG 的存在，尤其是对于一些达到一定规模的 App 因为协作模式错综复杂，就很容易带着问题上线。 一旦问题上线之后，问题就麻烦了，不仅需要重新打包、测试，而且还需要重新提交审核，而这种修复问题的方式往往是低效且漫长的。 因此，在开发一个 App 的过程中，稳定性的就变成了一个难题，唯一的原因就是不希望带着问题上线导致用户对 App 失去信任。 热修复就可">
+<meta name="twitter:image" content="https://silverfruity.github.io/2021/03/09/OCRunner-StartCodingHotFix/Clang-LLVM.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://silverfruity.github.io/2021/03/09/OCRunner-StartCodingHotFix/">
+
+
+
+
+
+  <title>OCRunner-从零教你写一个 iOS 热修复框架 | SilverFruity</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">SilverFruity</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description"></h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://silverfruity.github.io/2021/03/09/OCRunner-StartCodingHotFix/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Jiang">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SilverFruity">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">OCRunner-从零教你写一个 iOS 热修复框架</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-03-09T17:19:49+08:00">
+                2021-03-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OpenSource/" itemprop="url" rel="index">
+                    <span itemprop="name">OpenSource</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2021/03/09/OCRunner-StartCodingHotFix/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2021/03/09/OCRunner-StartCodingHotFix/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2021/03/09/OCRunner-StartCodingHotFix/" class="leancloud_visitors" data-flag-title="OCRunner-从零教你写一个 iOS 热修复框架">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  3.3k 字
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  11 分钟
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="为什么要热修复"><a href="#为什么要热修复" class="headerlink" title="为什么要热修复"></a>为什么要热修复</h3><p>在软件开发过程中，很难避免 BUG 的存在，尤其是对于一些达到一定规模的 App 因为协作模式错综复杂，就很容易带着问题上线。</p>
+<p>一旦问题上线之后，问题就麻烦了，不仅需要重新打包、测试，而且还需要重新提交审核，而这种修复问题的方式往往是低效且漫长的。</p>
+<p>因此，在开发一个 App 的过程中，稳定性的就变成了一个难题，唯一的原因就是不希望带着问题上线导致用户对 App 失去信任。</p>
+<p>热修复就可以很好的解决这类棘手的问题，因此带着好奇之心，研究了一下热修复在 iOS 端的可行性，实现<br>了一个较为完备的热修复框架，我把它叫做 OCRunner。</p>
+<p>我也会在未来几个月，把我做 OCRunner 的一些经验总结成博文，在「老司机技术周报」的公众号上与大<br>家分享。</p>
+<h3 id="已有的开源方案"><a href="#已有的开源方案" class="headerlink" title="已有的开源方案"></a>已有的开源方案</h3><ul>
+<li><p>采用 <strong>JavaScriptCore</strong> 的方案</p>
+<ul>
+<li><a href="https://github.com/bang590/JSPatch" target="_blank" rel="noopener"><em>JSPatch</em></a>通过下发 JavaScript 脚本，使用系统提供的  JavaScriptCore 执行 JavaScript 脚本，通过 JavaScript 代码解析代码中的类信息，动态调用相应的 Objective-C 函数，然后配合 libffi 修改 Runtime，最终实现热更新，奠定了 Objective-C 的热修复基础。</li>
+<li><a href="https://github.com/yangyangFeng/TTPatch" target="_blank" rel="noopener"><em>TTPatch</em></a>和 JSPatch 一样使用 JavaScriptCore 执行 JavaScript 脚本，但支持实时预览，这个是我超级喜欢的功能。</li>
+</ul>
+</li>
+<li><p>自实现脚本解释器的方案</p>
+<ul>
+<li><a href="https://github.com/lilidan/OCEval" target="_blank" rel="noopener"><em>OCEval</em></a>下发 Objective-C 源码解释执行，但支持的语法有限。作者<a href="https://github.com/lilidan" target="_blank" rel="noopener">lilidan</a>自己实现了 Objective-C 的词法分析器和语法分析器。其中的<a href="https://github.com/lilidan/OCEval/blob/master/OCEval/helper/FuntionSearch.c" target="_blank" rel="noopener">FunctionSearch的实现</a>也帮助了我许多。<a href="https://github.com/letqingbin/DynamicOC" target="_blank" rel="noopener">DynamicOC</a>将 OCEvel 的词法解析器和语法解析器使用 lex&amp;yacc 实现。</li>
+<li><a href="https://github.com/YPLiang19/Mango" target="_blank" rel="noopener"><em>Mango</em></a>作者设计了 Mango 的脚本语言（和 Objective-C 极为相似），使用 lex&amp;yacc 生成语法树，然后再将 Mango 脚本的语法树解释执行。这也就是 OCRunner 的起源。</li>
+<li><a href="https://github.com/SilverFruity/OCRunner" target="_blank" rel="noopener">OCRunner</a>是我在 Mango 的基础之上优化后的一个方案。和 Mango 相同的是，采用lex&amp;yacc生成语法树后解释执行、JSPatch 的 Runtime 的思想。但这一次，我们可以书写 Objective-C，然后直接动态执行它。同时也支持了许多特性：结构体、枚举、函数指针等。</li>
+</ul>
+</li>
+</ul>
+<p><strong>其他库不足的问题:</strong> </p>
+<ol>
+<li>支持不够完善：结构体、系统函数、枚举等。</li>
+<li>语法问题：一些语法上的小问题，有时候无异于回炉重造，也是需要时间成本的。有时候一些奇怪的语法问题，或许都要花你一个下午的时间。</li>
+<li>传输加解密:  JSPatch 等均采用 RSA (非对称加密)对整个脚本进行加密，个人认为着实耗费性能了一些。</li>
+</ol>
+<a id="more"></a>
+<h3 id="为什么要写-OCRunner"><a href="#为什么要写-OCRunner" class="headerlink" title="为什么要写 OCRunner"></a>为什么要写 OCRunner</h3><p>​    这次可以慢慢的讨论这个问题了~</p>
+<p>​    19 年 4 月的时候，刚好在趋势榜上看见了<a href="https://github.com/YPLiang19/Mango" target="_blank" rel="noopener">Mango</a>项目，发现它是使用自定义的、和 Objective-C 语法非常相似的脚本语言（相当于自己创造一名语言吧，balabala），当时早已对编译相关的心驰神往，奈何一直没有一个合适的机会去学习，再加上当时的公司有热更新的需求，就想着试一试，看能不能写一个将 Objective-C 代码转换为 Mango 脚本的转换器（也想过能不能借此自己完成一个热更新库）。</p>
+<p>​    19 年 4 月 晚上 10 点正式开启了每天回家爆肝 lex&amp;yacc 的升级打怪之路，各种各样的问题炸得我在锅里反复横跳（解决办法: 「  lex&amp;yacc.pdf 」抱着啃），但最严重的的莫过于指针相关的，参考了好几个基于 lex&amp;yacc 的开源编译器，才得以找到折中的解决办法。中间也发生了许多事情，从 19 年 7 月后，我休息了4个月。</p>
+<p>​    20 年 3 月的时候，想着 oc2mango 做了那么久，得把翻译器做出来了才能给自己一个交代，肝了一段时间，正确的使用 yyless 后，问题相较之前已经少了很多。这个时候 oc2mango 翻译器也能正常使用了，虽然仍有一些小问题。这个时候翻译器的小目标也就完成了✌️。</p>
+<p>​    当翻译器完成以后，我的野心变大了，我想试试我自己能不能完成一个像 Mango 一样的热更新库（内心戏： lex&amp;yacc 就是从它那儿学来的，应该不难吧？😂）。结果确实是年少无知，各种各样的坑。当完成了和 Mango 一样的功能时，这个时候我就已经很想获得 github 的✨✨了，跑去提了一个老司机的 issue，额，被打回来了，也是应该的，当时确实有很多问题（天真的以为，arm64 下，直接将参数放在相应的寄存器上，然后调用函数就行了 👏）。后面去认真看了 arm64 程序调用标准和 libffi 的代码后，自然而然的也就实现了自定义 arm64 ABI（其实哭着看了一个月）。后续也实现了结构体和系统函数指针的调用以及 Json 补丁和二进制补丁。</p>
+<p>​    直到发布<a href="https://silverfruity.github.io/2020/09/04/OCRunner/">OCRunner：完全体的iOS热修复方案</a> 后，我才每天开开心心的看着 star 突突的涨。</p>
+<p>​    其实打从一开始，我就没想过我会把 OCRunner 写出来，最开始的时候离我太遥远了，我也只能给自己一步一步的定一个小目标。起初的时候，github 星星算不上我的动力，oc2mango 和 OCRunner 极少的星星也是去群里贴小广告来的。更多的动力，其实是来源于自己完成了一个又一个的目标后的成就感，别人不能满足自己，就自己满足自己吧😂（啤酒炸鸡走起 hhhh）。保持一个乐观的心态，向前冲~</p>
+<h3 id="整体架构的启发"><a href="#整体架构的启发" class="headerlink" title="整体架构的启发"></a>整体架构的启发</h3><p>在说OCRunner之前，我们先聊聊Clang和LLVM（让我多打几个字😂）。</p>
+<p>通常我们在Xcode上运行 Objective-C 代码时，我们的编译器前端使用的是Clang，后端使用的是LLVM。首先 Clang 它通过词法、语法分析后，生成 抽象语法树 ，再由 抽象语法树 生成 LLVM IR 交给 LLVM 进行代码优化，最后将优化后的 LLVM IR 生成指定平台的机器代码，如图：</p>
+<img src="/2021/03/09/OCRunner-StartCodingHotFix/Clang-LLVM.jpg">
+<p><a href="https://blog.csdn.net/xhhjin/article/details/81164076" target="_blank" rel="noopener">图片出自: 简述 LLVM 与 Clang 及其关系</a></p>
+<p>在写 OCRunner 之前，我就在想，能不能用相似的架构去完成 OCRunner ？</p>
+<p>Clang替换为自己撸的渣渣编译器，LLVM 替换为自己完成的解释执行器，LLVM IR（中间代码）替换为 抽象语法树 或者是其他。代码优化，不存在的，远着呢，哈哈。</p>
+<p>但是，目前首先需要做的是，OCRunner能够正常跑起来😂。</p>
+<p>OCRunner 是一个将 Objective-C 代码作为输入的<strong>语法树解释执行器</strong>。</p>
+<p>其主要过程为: Objective-C -&gt; 抽象语法树 -&gt; 解释执行语法树。</p>
+<p>没有了解过这方面的人，光是看着抽象语法树这个鬼就已经头大了，何况是解释执行语法树（作者也是过来人之一🍻）。但是相信大家看完整个文章以后，对抽象语法树的认识会印象深刻的。</p>
+<ul>
+<li><p>Objective-C -&gt; 抽象语法树:  由 oc2mangoLib 来完成。</p>
+</li>
+<li><p>抽象语法树 -&gt; 解释执行语法树: 由 OCRunner 来完成。</p>
+</li>
+</ul>
+<blockquote>
+<p>起初的 OCRunner 项目中是包含了 oc2mangoLib 库的，为什么呢？</p>
+</blockquote>
+<ol>
+<li>作者当时对 Mango 中的很多东西也一知半解，需要用当前已有的方式去实现，等它的基础功能完善以后，才有时间去尝试我自己的东西。</li>
+<li>省事，单元测试中，一个单元测试既测试了语法树生成，也测试了运行结果。</li>
+<li>当时我也没想好，究竟应该以什么样的形式或者格式来作为中间者，它应该是一种固定的数据格式亦或是一种数据协议。</li>
+</ol>
+<blockquote>
+<p>既然抽象语法树已经能够满足解释运行的需求了，为什么还得要个中间数据协议呢？</p>
+</blockquote>
+<p>还记得Xcode中的<strong>Bitcode</strong>吗？它的作用就是以 LLVM IR 替代目标程序，比如我们上传 iTune Store Connect 的时候，其实上传的是我们的LLVM IR，苹果在自己的服务器上使用 LLVM 将我们的LLVM IR转换为相应目标程序。很多时候，我就在想，LLVM IR 和我们在面对对象中使用的 Interface 相同。咳咳，说个原因，跑偏了这么多😂，回到正题。</p>
+<ol>
+<li><p>词法分析、语法分析产生的相关崩溃，应该由编译前端来负责，不应该出现在解释执行的过程中，比如：语法报错等等。</p>
+</li>
+<li><p>不采用共同的数据格式，那就只能采用传输源码的方式，亦或是目前JSPatch或者Mango对源码进行RSA加密的方式。1. 不加密：补丁源码泄漏，安全风险太高， 2. RSA加密的方式：性能拉垮，破解得到源码不难，3. 不论加密或者不加密，源码增加后，数据量大小的增量更大。</p>
+</li>
+<li><p>针对编译器前端的优化，不必每次都更新 OCRunner 解释器。</p>
+</li>
+<li><p>各自更清晰的职责划分。</p>
+</li>
+<li><p>作者太菜，对写出的 oc2mangoLib 没什么自信😂。</p>
+</li>
+</ol>
+<blockquote>
+<p>以采用 Json 补丁为中间数据格式为例，此时我们的整个流程如下：</p>
+</blockquote>
+<p>Objective-C -&gt; 抽象语法树 -&gt; Json补丁 -&gt; 抽象语法树 -&gt; 解释执行语法树</p>
+<ol>
+<li><p>Objective-C -&gt; 抽象语法树:  oc2mangoLib</p>
+</li>
+<li><p>抽象语法树  -&gt;  Json补丁:     ORPatchFile</p>
+</li>
+<li><p>Json补丁     -&gt;  抽象语法树:  ORPatchFile </p>
+</li>
+<li><p>抽象语法树 -&gt; 解释执行语法树: OCRunner</p>
+</li>
+</ol>
+<h3 id="OCRunner"><a href="#OCRunner" class="headerlink" title="OCRunner"></a>OCRunner</h3><p>最后再（啰嗦）介绍一下 OCRunner： </p>
+<p>首先 <a href="https://github.com/SilverFruity/oc2mango" target="_blank" rel="noopener">PatchGenerator</a> 使用 oc2mangoLib 将 Objective-C 源码生成语法树，随后使用 ORPatchFile 将语法树序列化为补丁文件，最后 OCRunner 使用 OCPatchFile 将补丁反序列化为语法树后解释执行语法树。</p>
+<h4 id="优点"><a href="#优点" class="headerlink" title="优点:"></a>优点:</h4><ul>
+<li>前后端分离：PatchGenerator 生成补丁，OCRunner 解释执行补丁。</li>
+<li>补丁文件大小：相对于传输脚本文件，二进制补丁的大小拥有更好的表现。</li>
+<li>完善的 Objective-C 语法支持：结构体，Protocol，枚举，C 函数声明即链接系统函数，多参数调用等。</li>
+<li>可选的自定义 Arm64 ABI ：基于 Arm64 过程调用规约和 iOS TypeEncode 完成。</li>
+</ul>
+<h4 id="性能"><a href="#性能" class="headerlink" title="性能:"></a>性能:</h4><p>设备: iPhone SE 2，iOS 14.3</p>
+<p>在求斐波那契数列第25项的测试中:</p>
+<ul>
+<li><strong>JSPatch</strong>: 执行时间，平均为 0.169 s。内存占用一直稳定在 12 MB 左右。</li>
+<li><strong>OCRunner</strong>: 执行时间，平均为 1.05 s。内存占用，峰值为 60 MB 左右，其他稳定在 12 MB 左右。</li>
+<li><strong>Mango</strong>: 执行时间，平均时间为 2.38 s。内存占用，持续走高，最高的时候大约为 350 MB。</li>
+</ul>
+<p>结论:</p>
+<p>目前递归方法调用的速度，大约为JSPatch的1/5倍，为MangoFix的2.5倍左右。</p>
+<p>问题:</p>
+<p>关于递归方法调用时的内存占用，目前存在占用过大的问题。求斐波那契数列数列第30项的时候，OCRunner内存峰值占用大概在600MB。</p>
+<h4 id="Hook-Objective-C-方法"><a href="#Hook-Objective-C-方法" class="headerlink" title="Hook Objective-C 方法"></a>Hook Objective-C 方法</h4><ul>
+<li>JSPatch ，通过将类的目标方法替换为 objc_msgForward，同时将 forwardInvocation: 方法的 IMP 替换为 JPForwardInvocation 函数，当目标方法被调用时触发消息转发，在 JPForwardInvocation 函数中获取 NSInvocation 的各个参数值，再使用 JavaScriptCore 调用相应的函数，再将得到的结果设置到 NSInvocation 的返回值。</li>
+<li>OCRunner（MangoFix），通过直接将类的目标方法的 IMP 直接替换为使用 libffi 注册的 methodIMP 函数，通过 class 和 SEL 从 OCRunner 的方法注册表中获取到 ORMethodImplementation ，将它解释执行，获取到结果后，再写入 ret 指针中。</li>
+</ul>
+<h4 id="项目整体图"><a href="#项目整体图" class="headerlink" title="项目整体图"></a>项目整体图</h4><img src="/2021/03/09/OCRunner-StartCodingHotFix/整体架构.001.jpeg">
+<h3 id="后续文章安排"><a href="#后续文章安排" class="headerlink" title="后续文章安排"></a>后续文章安排</h3><h4 id="1-实现一个简单版-OCRunner-未完成"><a href="#1-实现一个简单版-OCRunner-未完成" class="headerlink" title="1. 实现一个简单版 OCRunner - 未完成"></a>1. <a href>实现一个简单版 OCRunner - 未完成</a></h4><p>在正文开始前，我们先看看大佬给出的语法树解释执行.gif，OCRunner的核心解释执行部分也是如此。</p>
+<p><img src="./eval_ast.gif" alt></p>
+<p><a href="https://www.iteye.com/blog/rednaxelafx-492667" target="_blank" rel="noopener">本图出自: 虚拟机随谈（一）：解释器，树遍历解释器，基于栈与基于寄存器，大杂烩</a></p>
+<p>如果你让我仅仅只靠文字就能给你解释清楚 OCRunner 是怎么运行起来的，你们可能是在为难我小蒋，肚子里墨水真的没那么多啊，太难了😂。所以在这一小节，我给大家准备了一个简单版 OCRunner，希望大家能从这个例子中，真正知道它是如何运行的。</p>
+<p>希望你们看见项目中的 SingleEngine 类不要笑（哈哈哈），我只是想表达 单缸发动机 的意思 - _ -，我心爱的小摩托就是单缸拖拉机。</p>
+<p>作者快马加鞭打磨中…..</p>
+<h4 id="2-二进制补丁文件的实现-未完成"><a href="#2-二进制补丁文件的实现-未完成" class="headerlink" title="2. 二进制补丁文件的实现 - 未完成"></a>2. <a href>二进制补丁文件的实现 - 未完成</a></h4><p>作者快马加鞭完成中…..</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+      <div>
+        <ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者：</strong>
+    Jiang
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://silverfruity.github.io/2021/03/09/OCRunner-StartCodingHotFix/" title="OCRunner-从零教你写一个 iOS 热修复框架">https://silverfruity.github.io/2021/03/09/OCRunner-StartCodingHotFix/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>
+    本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/" rel="external nofollow" target="_blank">CC BY-NC-SA 3.0</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+
+      </div>
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/hotfix/" rel="tag"># hotfix</a>
+          
+            <a href="/tags/iOS/" rel="tag"># iOS</a>
+          
+            <a href="/tags/Objective-C/" rel="tag"># Objective-C</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/09/04/OCRunner/" rel="next" title="OCRunner：完全体的iOS热修复方案">
+                <i class="fa fa-chevron-left"></i> OCRunner：完全体的iOS热修复方案
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/03/09/OCRunner-SimpleOCRunner/" rel="prev" title="OCRunner-实现一个简单版 OCRunner">
+                OCRunner-实现一个简单版 OCRunner <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.png" alt="Jiang">
+            
+              <p class="site-author-name" itemprop="name">Jiang</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么要热修复"><span class="nav-number">1.</span> <span class="nav-text">为什么要热修复</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#已有的开源方案"><span class="nav-number">2.</span> <span class="nav-text">已有的开源方案</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么要写-OCRunner"><span class="nav-number">3.</span> <span class="nav-text">为什么要写 OCRunner</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#整体架构的启发"><span class="nav-number">4.</span> <span class="nav-text">整体架构的启发</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#OCRunner"><span class="nav-number">5.</span> <span class="nav-text">OCRunner</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#优点"><span class="nav-number">5.1.</span> <span class="nav-text">优点:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#性能"><span class="nav-number">5.2.</span> <span class="nav-text">性能:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Hook-Objective-C-方法"><span class="nav-number">5.3.</span> <span class="nav-text">Hook Objective-C 方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#项目整体图"><span class="nav-number">5.4.</span> <span class="nav-text">项目整体图</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#后续文章安排"><span class="nav-number">6.</span> <span class="nav-text">后续文章安排</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-实现一个简单版-OCRunner-未完成"><span class="nav-number">6.1.</span> <span class="nav-text">1. 实现一个简单版 OCRunner - 未完成</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-二进制补丁文件的实现-未完成"><span class="nav-number">6.2.</span> <span class="nav-text">2. 二进制补丁文件的实现 - 未完成</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2019 &mdash; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jiang</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: false,
+        notify: false,
+        appId: 'VS3cQiJ0SvKu8yffcUhucXVa-gzGzoHsz',
+        appKey: '7IsQXOyh5G5NhvJGb0gCQvtl',
+        placeholder: 'Emmm.',
+        avatar:'monsterid',
+        meta:guest,
+        pageSize:'10' || 10,
+        visitor: true
+    });
+  </script>
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

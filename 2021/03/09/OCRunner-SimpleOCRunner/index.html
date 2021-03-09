@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans,en,default">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="hotfix,iOS,Objective-C,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="在正文开始前，我们先看看给出的语法树解释执行.gif，OCRunner的核心解释执行部分也是如此。  本图出自: 虚拟机随谈（一）：解释器，树遍历解释器，基于栈与基于寄存器，大杂烩 如果你让我仅仅只靠文字就能给你解释清楚 OCRunner 是怎么运行起来的，你们可能是在为难我小蒋，肚子里墨水真的没那么多啊，太难了😂。所以在这一小节，我给大家准备了一个简单版 OCRunner，希望大家能从这个例子">
+<meta name="keywords" content="hotfix,iOS,Objective-C">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OCRunner-实现一个简单版 OCRunner">
+<meta property="og:url" content="https://silverfruity.github.io/2021/03/09/OCRunner-SimpleOCRunner/index.html">
+<meta property="og:site_name" content="SilverFruity">
+<meta property="og:description" content="在正文开始前，我们先看看给出的语法树解释执行.gif，OCRunner的核心解释执行部分也是如此。  本图出自: 虚拟机随谈（一）：解释器，树遍历解释器，基于栈与基于寄存器，大杂烩 如果你让我仅仅只靠文字就能给你解释清楚 OCRunner 是怎么运行起来的，你们可能是在为难我小蒋，肚子里墨水真的没那么多啊，太难了😂。所以在这一小节，我给大家准备了一个简单版 OCRunner，希望大家能从这个例子">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://silverfruity.github.io/2021/03/09/OCRunner-SimpleOCRunner/eval_ast.gif">
+<meta property="og:image" content="https://silverfruity.github.io/2021/03/09/OCRunner-SimpleOCRunner/OCRunnerExecute.png">
+<meta property="og:updated_time" content="2021-03-09T09:37:11.920Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="OCRunner-实现一个简单版 OCRunner">
+<meta name="twitter:description" content="在正文开始前，我们先看看给出的语法树解释执行.gif，OCRunner的核心解释执行部分也是如此。  本图出自: 虚拟机随谈（一）：解释器，树遍历解释器，基于栈与基于寄存器，大杂烩 如果你让我仅仅只靠文字就能给你解释清楚 OCRunner 是怎么运行起来的，你们可能是在为难我小蒋，肚子里墨水真的没那么多啊，太难了😂。所以在这一小节，我给大家准备了一个简单版 OCRunner，希望大家能从这个例子">
+<meta name="twitter:image" content="https://silverfruity.github.io/2021/03/09/OCRunner-SimpleOCRunner/eval_ast.gif">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://silverfruity.github.io/2021/03/09/OCRunner-SimpleOCRunner/">
+
+
+
+
+
+  <title>OCRunner-实现一个简单版 OCRunner | SilverFruity</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">SilverFruity</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description"></h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://silverfruity.github.io/2021/03/09/OCRunner-SimpleOCRunner/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Jiang">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SilverFruity">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">OCRunner-实现一个简单版 OCRunner</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-03-09T17:25:49+08:00">
+                2021-03-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OpenSource/" itemprop="url" rel="index">
+                    <span itemprop="name">OpenSource</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2021/03/09/OCRunner-SimpleOCRunner/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2021/03/09/OCRunner-SimpleOCRunner/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2021/03/09/OCRunner-SimpleOCRunner/" class="leancloud_visitors" data-flag-title="OCRunner-实现一个简单版 OCRunner">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  4.7k 字
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  19 分钟
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>在正文开始前，我们先看看给出的语法树解释执行.gif，OCRunner的核心解释执行部分也是如此。</p>
+<img src="/2021/03/09/OCRunner-SimpleOCRunner/eval_ast.gif">
+<p><a href="https://www.iteye.com/blog/rednaxelafx-492667" target="_blank" rel="noopener">本图出自: 虚拟机随谈（一）：解释器，树遍历解释器，基于栈与基于寄存器，大杂烩</a></p>
+<p>如果你让我仅仅只靠文字就能给你解释清楚 OCRunner 是怎么运行起来的，你们可能是在为难我小蒋，肚子里墨水真的没那么多啊，太难了😂。所以在这一小节，我给大家准备了一个简单版 OCRunner，希望大家能从这个例子中，真正知道它是如何运行的。</p>
+<p>希望你们看见项目中的 SingleEngine 类不要笑（哈哈哈），我只是想表达 单缸发动机 的意思 - _ -，我心爱的小摩托就是单缸拖拉机。</p>
+<p>本节假设读者并不具备编译相关的知识。</p>
+<p>本文对 lex 和 yacc 介绍有限，关于 flex 和 bison 的详细使用可以参照《flex与bison中文版》或者 《flex&amp;bison》。</p>
+<p><a href="https://github.com/SilverFruity/SimpleOCRunnerDemo" target="_blank" rel="noopener">Demo源码</a>，建议使用 <code>git clone</code> 的形式下载源码，每个小节的相应源码都对应在各自的 commit 里。通过边看文章边阅读源码的形式食用，更香哟。</p>
+<p>我们将通过以下这个例子，来说明 OCRunner 执行的主要实现，将省略补丁文件的序列化和加载过程。</p>
+<p>现在，我们的目标是让这段文本像 C 一样执行，并且最终变量 <strong>c</strong> 的值为 5 。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> d = <span class="number">2</span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> arg0, <span class="keyword">double</span> arg1)</span></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> arg0 + arg1 + d;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">int</span> a = <span class="number">1</span>; </span><br><span class="line"><span class="keyword">double</span> b = <span class="number">2.0</span>;</span><br><span class="line"><span class="keyword">int</span> c = add(a, b);</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+<h4 id="词法分析器"><a href="#词法分析器" class="headerlink" title="词法分析器"></a>词法分析器</h4><p>通俗来说，词法分析就是将符合相应规则的字符串转换为一个 <strong>Token</strong>（可以将它看为一个由<strong>类型</strong>和<strong>值</strong>两个属性组成的类）。</p>
+<p>比如当匹配到 ‘int’ 时，’int’ 将会被转换为 INT_TYPE ，也是就是 Token 的类型，它的值可以是我们后续的值类型（一个枚举）。</p>
+<p>再比如当匹配到 ‘1.0’ 字符串时，’1.0’ 被转换为 DOUBLE_LITERAL 类型并且 Token 此时的值为浮点数 1.0。</p>
+<p>针对这里例子，我们现在有如下几个规则:</p>
+<ol>
+<li>关键词: int、double、return</li>
+<li><p>标识符（可以是变量名、类型等）:  以字母、_ 、$ 开头的字符串</p>
+</li>
+<li><p>数值:  整数、浮点数</p>
+</li>
+<li>符号: ( ) ; { } , = +</li>
+</ol>
+<p>上述都是我们接下来需要识别的，我们将直接使用 flex 完成词法分析器。</p>
+<p>词法分析器 <strong>lexer.l</strong> 中的代码:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">%option noyywrap</span><br><span class="line">%&#123;</span><br><span class="line">    <span class="meta">#import <span class="meta-string">&lt;Foundation/Foundation.h&gt;</span></span></span><br><span class="line">    <span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"y.tab.h"</span></span></span><br><span class="line">%&#125;</span><br><span class="line">%%</span><br><span class="line"><span class="string">","</span> &#123; <span class="keyword">return</span> <span class="string">','</span>;&#125;</span><br><span class="line"><span class="string">";"</span> &#123; <span class="keyword">return</span> <span class="string">';'</span>; &#125;</span><br><span class="line"><span class="string">"("</span> &#123; <span class="keyword">return</span> <span class="string">'('</span>; &#125;</span><br><span class="line"><span class="string">")"</span> &#123; <span class="keyword">return</span> <span class="string">')'</span>; &#125;</span><br><span class="line"><span class="string">"&#123;"</span> &#123; <span class="keyword">return</span> <span class="string">'&#123;'</span>; &#125;</span><br><span class="line"><span class="string">"&#125;"</span> &#123; <span class="keyword">return</span> <span class="string">'&#125;'</span>; &#125;</span><br><span class="line"><span class="string">"="</span> &#123; <span class="keyword">return</span> <span class="string">'='</span>; &#125;</span><br><span class="line"><span class="string">"+"</span> &#123; <span class="keyword">return</span> <span class="string">'+'</span>; &#125;</span><br><span class="line"><span class="string">"-"</span> &#123; <span class="keyword">return</span> <span class="string">'-'</span>; &#125;</span><br><span class="line"><span class="string">"int"</span> &#123; <span class="keyword">return</span> INT_TYPE; &#125;</span><br><span class="line"><span class="string">"double"</span> &#123; <span class="keyword">return</span> DOUBLE_TYPE; &#125;</span><br><span class="line"><span class="string">"return"</span> &#123; <span class="keyword">return</span>  RETURN; &#125;</span><br><span class="line"><span class="comment">// 浮点数</span></span><br><span class="line">[<span class="number">0</span><span class="number">-9</span>]+\.[<span class="number">0</span><span class="number">-9</span>]+ &#123; yylval.doubleValue = atof(yytext); <span class="keyword">return</span> DOUBLE_LITERAL; &#125;</span><br><span class="line"><span class="comment">// 整数</span></span><br><span class="line">[<span class="number">1</span><span class="number">-9</span>][<span class="number">0</span><span class="number">-9</span>]* &#123;  yylval.intValue = (<span class="keyword">int</span>)strtol(yytext, <span class="literal">NULL</span>, <span class="number">10</span>); <span class="keyword">return</span> INTETER_LITERAL; &#125;</span><br><span class="line"><span class="comment">// 标识符</span></span><br><span class="line">[A-Za-z_$][A-Za-z_$<span class="number">0</span><span class="number">-9</span>]* &#123; yylval.stringValue = yytext; <span class="keyword">return</span> IDENTIFIER; &#125;</span><br><span class="line">%%</span><br></pre></td></tr></table></figure>
+<h5 id="Flex语法简单简介"><a href="#Flex语法简单简介" class="headerlink" title="Flex语法简单简介"></a>Flex语法简单简介</h5><ul>
+<li>上半部分的<code>%{  %}</code> 主要用于书写 C 代码，引入头文件，自定义函数等等，最终会以文本的形式被添加到 <strong>lexer.yy.c</strong> 中（ Demo 中你可以在编译缓存中找到该文件）。</li>
+<li>下半部分的 <code>%%  %%</code>就是关键了，通过使用正则表达式，将符合规则的字符流转换为相应的 token 。</li>
+<li><strong>yylval</strong>这则是 Token 的值，默认情况下它一个 int 类型，但是在 bison 中可以使用 <strong>%union</strong> 声明来重新定义它的类型。</li>
+</ul>
+<p>当我们调用词法分析器后，上述文本将会做出如下转换，如何对它进行语法匹配，这就是接下来的内容了。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">	int          d      =       2       ;</span><br><span class="line">&gt; INT_TYPE IDENTIFIER = INTETER_LITERAL ;</span><br><span class="line">  int      add        (    int       arg0     ,   double      arg1     ) &#123;</span><br><span class="line">&gt; INT_TYPE IDENTIFIER ( INT_TYPE IDENTIFIER , DOUBLE_TYPE IDENTIFIER ) &#123;</span><br><span class="line">  return     arg0   +    arg1    +     d      ;</span><br><span class="line">&gt; RETURN IDENTIFIER + IDENTIFIER + IDENTIFIER ;</span><br><span class="line">  &#125;</span><br><span class="line">&gt; &#125;</span><br><span class="line">	int          a      =       1       ;</span><br><span class="line">&gt; INT_TYPE IDENTIFIER = INTETER_LITERAL ;</span><br><span class="line">  double          b      =         2.0     ;</span><br><span class="line">&gt; DOUBLE_TYPE IDENTIFIER = INTETER_LITERAL ;</span><br><span class="line">  int           c     =    add     (     a      ,      b     ) ;</span><br><span class="line">&gt; INT_TYPE IDENTIFIER = IDENTIFIER ( IDENTIFIER , IDENTIFIER ) ;</span><br></pre></td></tr></table></figure>
+<h4 id="语法分析器"><a href="#语法分析器" class="headerlink" title="语法分析器"></a>语法分析器</h4><p>语法分析器 <strong>parser.y</strong> 中的代码，目前还没有任何语法相关的逻辑。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">%&#123;</span><br><span class="line"><span class="meta">#import <span class="meta-string">&lt;Foundation/Foundation.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> YYDEBUG 1</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> YYERROR_VERBOSE</span></span><br><span class="line"><span class="function"><span class="keyword">extern</span> <span class="keyword">int</span> <span class="title">yylex</span> <span class="params">(<span class="keyword">void</span>)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">extern</span> <span class="keyword">void</span> <span class="title">yyerror</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *s)</span></span>;</span><br><span class="line">%&#125;</span><br><span class="line">%<span class="keyword">union</span>&#123;</span><br><span class="line">    <span class="keyword">uint64_t</span> intValue;</span><br><span class="line">    <span class="keyword">double</span> doubleValue; </span><br><span class="line">    <span class="keyword">char</span> *stringValue;</span><br><span class="line">    __unsafe_unretained id object;</span><br><span class="line">&#125;</span><br><span class="line">%token&lt;stringValue&gt; IDENTIFIER</span><br><span class="line">%token&lt;doubleValue&gt; DOUBLE_LITERAL</span><br><span class="line">%token&lt;intValue&gt; 		INTETER_LITERAL</span><br><span class="line">%token INT_TYPE</span><br><span class="line">%token DOUBLE_TYPE</span><br><span class="line">%token RETURN</span><br><span class="line">%start door</span><br><span class="line">%type&lt;object&gt; statements</span><br><span class="line"></span><br><span class="line">%%</span><br><span class="line">door: </span><br><span class="line"><span class="comment">/*empty*/</span></span><br><span class="line">| statements;</span><br><span class="line">;</span><br><span class="line">statements:</span><br><span class="line"><span class="comment">/*empty*/</span></span><br><span class="line">;</span><br><span class="line">%%</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">yyerror</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *s)</span></span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="Yacc语法简单介绍"><a href="#Yacc语法简单介绍" class="headerlink" title="Yacc语法简单介绍"></a>Yacc语法简单介绍</h5><ul>
+<li><p><code>%{  %}</code>中和 Flex 是一样的。但是关于这里的 yylex 和 yyerror 两个函数，他们两兄弟是必须引入的</p>
+</li>
+<li><p><strong>%union</strong> 如之前所说，将重新定义 <strong>yylval</strong> 的类型，可以在词法分析阶段，保留不同类型的值</p>
+</li>
+<li><p><strong>%token\&lt;stringValue> IDENTIFIER</strong> 将在 yacc 声明一个名为 IDENTIFIER 的 token，并且表明了它的值类型（获取它的值时，将从 union 的哪个字段取值）。</p>
+</li>
+<li><p><strong>%type\&lt;object> statements</strong> 与 <strong>%token</strong> 不同是的，这是声明一条规约（语法规则）。</p>
+</li>
+<li><p><strong>%start</strong> 将从指定的规约，作为语法解析器的入口</p>
+</li>
+<li><p>关于 <code>%{  %}</code> 和 <code>%% %%</code>，与 flex 不同是的，<code>%% %%</code> 中采用 BNF 文法的变种来描述语法规则，当你明白了它的运作方式，其实可读性还是很高的。</p>
+<p>现在我们需要使用 <strong>lexer.l</strong> 以及 <strong>parser.y</strong> ，完成对 <code>a = 1 + 2; b = 2.0 - 1.0;</code> 的识别，并且打印计算结果。</p>
+<p>使用 Yacc 实现对两个表达式的识别以及计算的源码，已经在仓库 <a href="https://github.com/SilverFruity/SimpleOCRunnerDemo" target="_blank" rel="noopener">SimpleOCRunnerDemo</a> 的 <a href="https://github.com/SilverFruity/SimpleOCRunnerDemo/commit/c09d35868207ec44e7a4854552e9b19246f561d1" target="_blank" rel="noopener">不同类型简单计算的例子</a>  中完成，对 Yacc 语法不熟悉的小伙伴，可以看完这一小部分，再去看源码。为限制本文篇幅，我将尽量减少在文中的代码。</p>
+<p>首先我们先将 <code>a = 1 + 2; b = 2.0 - 1.0;</code> 转换为 Token :</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//表达式 1</span></span><br><span class="line">IDENTIFIER = INTETER_LITERAL + INTETER_LITERAL ;</span><br><span class="line"><span class="comment">//表达式 2</span></span><br><span class="line">IDENTIFIER = DOUBLE_LITERAL - DOUBLE_LITERAL ;</span><br></pre></td></tr></table></figure>
+<p>通俗来说，如果我们逐个逐个的读入每个 Token，我们要匹配上述两个表达式，可以有以下代码逻辑：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">extern</span> Token <span class="title">nextToken</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br><span class="line"><span class="keyword">while</span>(token = nextToken()):</span><br><span class="line">	<span class="keyword">if</span> token == IDENTIFIER:</span><br><span class="line">		<span class="keyword">if</span> nextToken() == <span class="string">'='</span>:</span><br><span class="line">			 token = nextToken();</span><br><span class="line">		   <span class="keyword">if</span> token == INTETER_LITERAL:</span><br><span class="line">		   	 <span class="keyword">if</span> nextToken() == <span class="string">'+'</span>:</span><br><span class="line">		   	 	 <span class="keyword">if</span> nextToken() == INTETER_LITERAL:</span><br><span class="line">		   	 	   <span class="comment">//完成 IDENTIFIER = INTETER_LITERAL + INTETER_LITERAL ;</span></span><br><span class="line">		   	 	 	 <span class="keyword">return</span></span><br><span class="line">		   <span class="keyword">if</span> token == DOUBLE_LITERAL:</span><br><span class="line">		   	 <span class="keyword">if</span> nextToken() == <span class="string">'-'</span>:</span><br><span class="line">		   	 	 <span class="keyword">if</span> nextToken() == DOUBLE_LITERAL:</span><br><span class="line">		   	 	   <span class="comment">//完成 IDENTIFIER = DOUBLE_LITERAL - DOUBLE_LITERAL ;</span></span><br><span class="line">		   	 	 	 <span class="keyword">return</span></span><br><span class="line">	<span class="keyword">break</span>;</span><br><span class="line">	</span><br><span class="line"><span class="comment">// 这个逻辑使用 Yacc 代码可以表示为</span></span><br><span class="line">assign_expression:</span><br><span class="line">IDENTIFIER <span class="string">'='</span> expression</span><br><span class="line">;</span><br><span class="line">expression:</span><br><span class="line">INTETER_LITERAL + INTETER_LITERAL</span><br><span class="line">| DOUBLE_LITERAL - DOUBLE_LITERAL</span><br><span class="line">;</span><br><span class="line"><span class="comment">//  NAME: 其实是实现了一条规约（语法规则），始终对下一个Token进行匹配，其实中的 | 表示一个 or 的逻辑分支，还有就是规约可以递归使用。更多的Yacc语法可以参阅《flex与bison中文版》53页。</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>现在让我们回到初始目标，现在我们要实现它相应的语法分析器:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> d = <span class="number">2</span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> arg0, <span class="keyword">double</span> arg1)</span></span>&#123;</span><br><span class="line">  <span class="keyword">return</span> arg0 + arg1 + d;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">int</span> a = <span class="number">1</span>; </span><br><span class="line"><span class="keyword">double</span> b = <span class="number">2.0</span>;</span><br><span class="line"><span class="keyword">int</span> c = add(a, b);</span><br></pre></td></tr></table></figure>
+<p>还记得我们在词法分析器中的实现吗，文本到 Token 的转换规则:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> -&gt; INT_TYPE</span><br><span class="line"><span class="keyword">double</span> -&gt; DOUBLE_TYPE</span><br><span class="line">'a-zA-z' -&gt; IDENTIFIER</span><br><span class="line"><span class="number">1</span> -&gt; INTEGER_LITERAL</span><br><span class="line"><span class="number">2.0</span> -&gt; DOUBLE_LITERAL</span><br><span class="line">()&#123;&#125;+,=; -&gt; ()&#123;&#125;+,=; <span class="comment">//字符</span></span><br></pre></td></tr></table></figure>
+<p>首先，我们完全可以确定的是，出现最多的 Token 组合为：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// int/double xxx</span></span><br><span class="line">TYPE IDENTIFIER</span><br></pre></td></tr></table></figure>
+<p>同时我们的数据类型有两种，分别为 int / double ，因此我们的第一条规约为:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">specifier_type:</span><br><span class="line">INT_TYPE</span><br><span class="line">|DOUBLE_TYPE</span><br><span class="line">;</span><br></pre></td></tr></table></figure>
+<p>接下来，我们来梳理一下所有的声明语法（变量、函数）:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a</span><br><span class="line"><span class="keyword">double</span> b = <span class="number">2.0</span></span><br><span class="line"><span class="keyword">int</span> add(<span class="keyword">int</span> arg0, <span class="keyword">int</span> arg1)</span><br></pre></td></tr></table></figure>
+<p>针对以上三个声明语法，可以使用以下两个规约匹配：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 对int/double xxx统一处理，其他的单独处理即可</span></span><br><span class="line">declaration:</span><br><span class="line">specifier_type IDENTIFIER</span><br><span class="line">| declaration <span class="string">'='</span> expression</span><br><span class="line">| declaration <span class="string">'('</span> declaration_list <span class="string">')'</span></span><br><span class="line">;</span><br><span class="line"></span><br><span class="line"><span class="comment">// declaration_list 就是一个以','为分隔符的列表处理</span></span><br><span class="line">declaration_list:</span><br><span class="line">declaration</span><br><span class="line">| declaration_list <span class="string">','</span> declaration</span><br><span class="line">;</span><br></pre></td></tr></table></figure>
+<p>接下来我们需要处理表达式，我们这里对表达式简单的定义为： ‘=’  和 ‘return’ 右部分，不包含 ‘;’ 。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span></span><br><span class="line"><span class="number">1.0</span></span><br><span class="line">a</span><br><span class="line">a + b</span><br><span class="line">add(a, b)</span><br></pre></td></tr></table></figure>
+<p>针对以上表达式，可以使用的最简规约</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 处理 1、1.0、a</span></span><br><span class="line">primary_expression:</span><br><span class="line">IDENTIFIER</span><br><span class="line">| INTETER_LITERAL</span><br><span class="line">| DOUBLE_LITERAL</span><br><span class="line">;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 处理 a + b、add(a, b)</span></span><br><span class="line">expression:</span><br><span class="line">primary_expression</span><br><span class="line">| expression <span class="string">'+'</span> expression</span><br><span class="line">| expression <span class="string">'('</span> expression_list <span class="string">')'</span></span><br><span class="line">;</span><br><span class="line"><span class="comment">// expression_list与declaration_list雷同</span></span><br></pre></td></tr></table></figure>
+<p>实现了expression规约后，实现 <strong>return</strong> 就很简单了 <code>RETURN expression</code>。</p>
+<p>我们将 <code>{ ... }</code> 这个整体统称为一个块或者是作用域，它由表达式的列表或者子作用域组成。</p>
+<p>在完成对块的匹配之前，我们首先要能够匹配多个不同的声明。</p>
+<p>根据已经实现的规约，在其尾部加一个<code>;</code>，完成一个声明的匹配。</p>
+<p>因此实现了 <code>statement</code> 规约，用以将各个声明的规约整合。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">statement:</span><br><span class="line">declaration &apos;;&apos;</span><br><span class="line">| expression &apos;;&apos;</span><br><span class="line">| RETURN expression &apos;;&apos;</span><br><span class="line">;</span><br></pre></td></tr></table></figure>
+<p>其次，我们还需要匹配作用域中的多个声明或者零个声明，那么 <code>statement_list</code> 应运而生。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">statement_list: </span><br><span class="line">| statement</span><br><span class="line">| statement_list statement</span><br><span class="line">;</span><br></pre></td></tr></table></figure>
+<p>这个时候，我们已经能够处理作用域中的声明列表了，那么针对作用域的规约如下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">scope_statements:</span><br><span class="line">&apos;&#123;&apos; statement_list &apos;&#125;&apos;</span><br><span class="line">;</span><br></pre></td></tr></table></figure>
+<p>目前就只有对函数的声明没有实现了，但我们早已在 <code>declaration</code> 中实现了对了 <code>int add(int a, double b)</code> 识别。<br>最终的 <code>statement</code> 规约如下:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">statement:</span><br><span class="line">declaration <span class="string">';'</span></span><br><span class="line">| expression <span class="string">';'</span></span><br><span class="line">| RETURN expression <span class="string">';'</span></span><br><span class="line"><span class="comment">//函数声明的识别</span></span><br><span class="line">| declaration scope_statements</span><br><span class="line">;</span><br></pre></td></tr></table></figure>
+<p>本小节相关代码，在<a href="https://github.com/SilverFruity/SimpleOCRunnerDemo" target="_blank" rel="noopener">SimpleOCRunnerDemo</a> 的 <a href="https://github.com/SilverFruity/SimpleOCRunnerDemo/commit/850de3fe2db9ce3a059e809560bb2fb88ea3ac06" target="_blank" rel="noopener">section 语法分析</a>  提交中。</p>
+<h4 id="生成语法树"><a href="#生成语法树" class="headerlink" title="生成语法树"></a>生成语法树</h4><p>在我们这个例子中，语法树中需要的节点如下（如果小伙伴想添加更多的语法，可自行更改）：</p>
+<p>所有节点都继承自<strong>ASTNode</strong>类。</p>
+<ol>
+<li><strong>ASTSpecifierNode</strong>变量类型节点：<code>int</code> , <code>double</code>  </li>
+<li><strong>ASTDeclareNode</strong>变量声明节点：<code>int a</code> </li>
+<li><strong>ASTValueNode</strong>值节点: <code>2</code>, <code>1.0</code>, <code>a</code></li>
+<li><strong>ASTInitDeclareNode</strong>变量初始化声明节点: <code>double b = 2.0</code></li>
+<li><strong>ASTBinaryNode</strong>二元运算节点: <code>a + b</code></li>
+<li><strong>ASTScopeNode</strong>作用域节点: <code>{}</code></li>
+<li><strong>ASTFunctionDeclareNode</strong>函数声明节点: <code>int add(int arg0, double arg1)</code></li>
+<li><strong>ASTFunctionImpNode</strong>函数节点:  <code>int add(int arg0, double arg1) { }</code></li>
+<li><strong>ASTReturnNode </strong>return节点：<code>return xxx</code></li>
+<li><strong>ASTFunctionCallNode</strong>函数调用节点: <code>add(a, b)</code></li>
+</ol>
+<p><strong>ASTSpecifierNode</strong> <code>int/double</code>：我们这里其实就是一个简单枚举，但我们还添加了类型名称的属性</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">typedef enum&#123;</span><br><span class="line">    ASTSpecifierTypeInt,</span><br><span class="line">    ASTSpecifierTypeDouble</span><br><span class="line">&#125;ASTSpecifierType;</span><br><span class="line"></span><br><span class="line">@interface ASTSpecifierNode: ASTNode</span><br><span class="line">@property (nonatomic, assign) ASTSpecifierType type;</span><br><span class="line">@property (nonatomic, strong) NSString *typeName;</span><br><span class="line">@end</span><br></pre></td></tr></table></figure>
+<p><strong>ASTDeclareNode</strong> <code>int a</code>:  可以看出由一个变量类型( <strong>ASTSpecifierNode</strong> )和变量名组成</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">@interface ASTDeclareNode: ASTNode</span><br><span class="line">@property (nonatomic, strong) ASTSpecifierNode *type;</span><br><span class="line">@property (nonatomic, strong) NSString *varname;</span><br><span class="line">@end</span><br></pre></td></tr></table></figure>
+<p><strong>ASTValueNode</strong>  <code>2</code>, <code>1.0</code>, <code>a</code>:  有三种值，整型、浮点数、变量名</p>
+<p>在我们的代码中存在两种变量，标识符：<code>a</code>，标量：<code>1.0 ...</code>，同时一个变量只能拥有一个值和一个值类型，所以我们使用<code>enum ASTValueNodeType</code> + <code>union ASTValueNodeValue</code>的形式来完成类型和值的对应。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">typedef enum&#123;</span><br><span class="line">    ASTValueNodeIdentifier,</span><br><span class="line">    ASTValueNodeInt,</span><br><span class="line">    ASTValueNodeDouble</span><br><span class="line">&#125;ASTValueNodeType;</span><br><span class="line"></span><br><span class="line">typedef union &#123;</span><br><span class="line">    void *pointerValue;</span><br><span class="line">    int64_t intValue;</span><br><span class="line">    double doubleValue;</span><br><span class="line">&#125;ASTValueNodeValue;</span><br><span class="line"></span><br><span class="line">@interface ASTValueNode: ASTNode</span><br><span class="line">@property (nonatomic, assign) ASTValueNodeType type;</span><br><span class="line">@property (nonatomic, assign) ASTValueNodeValue value;</span><br><span class="line">@end</span><br></pre></td></tr></table></figure>
+<p><strong>ASTInitDeclareNode</strong> <code>double b = 2.0</code>: 此时我们再处理初始化声明表达式的数据结构就很简单了，由变量声明节点和值节点组成，结构如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">@interface ASTInitDeclareNode: ASTNode</span><br><span class="line">@property (nonatomic, strong) ASTDeclareNode *declare;</span><br><span class="line">@property (nonatomic, strong) ASTNode *expression;</span><br><span class="line">@end</span><br></pre></td></tr></table></figure>
+<p><strong>ASTBinaryNode</strong> <code>a + b</code>: 主要有左右两个表达式以及中间的操作符组成</p>
+<p>事实上，左右的表达式可能并不单单只是一个变量名（或者表达式），因此，我们这里使用的是<strong>ASTNode</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">typedef enum &#123;</span><br><span class="line">    ASTBinaryNodeOperatorAdd</span><br><span class="line">&#125;ASTBinaryNodeOperator;</span><br><span class="line"></span><br><span class="line">@interface ASTBinaryNode: ASTNode</span><br><span class="line">@property (nonatomic, assign) ASTBinaryNodeOperator operator;</span><br><span class="line">@property (nonatomic, strong) ASTNode *left;</span><br><span class="line">@property (nonatomic, strong) ASTNode *right;</span><br><span class="line">@end</span><br></pre></td></tr></table></figure>
+<p><strong>ASTScopeNode</strong>  <code>{}</code> 中主要存在的是多个语法节点，因此，其属性只有一个存储节点的数组</p>
+<p><strong>ASTFunctionDeclareNode</strong>  <code>int add(int a, double b)</code>，主要由一个 <strong>ASTDeclareNode</strong>（<code>int add</code>）和它的数组（<code>int a, double b</code>）组成</p>
+<p><strong>ASTFunctionImpNode</strong> <code>int add(int a, double b) { }</code>，则是由上述两个节点组成</p>
+<p><strong>ASTFunctionCallNode</strong> <code>add(a, b)</code> ，由一个调用者节点和参数节点数组组成</p>
+<p>因此他们的结构如下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">@interface ASTScopeNode : ASTNode</span><br><span class="line">@property (nonatomic, strong) NSMutableArray *nodes;</span><br><span class="line">@end</span><br><span class="line"></span><br><span class="line">@interface ASTFunctionDeclareNode: ASTNode</span><br><span class="line">@property (nonatomic, strong) ASTDeclareNode *declare;</span><br><span class="line">@property (nonatomic, strong) NSMutableArray *argDeclares;</span><br><span class="line">@end</span><br><span class="line"></span><br><span class="line">@interface ASTFunctionImpNode: ASTNode</span><br><span class="line">@property (nonatomic, strong) ASTFunctionDeclareNode *declare;</span><br><span class="line">@property (nonatomic, strong) ASTScopeNode *scope;</span><br><span class="line">@end</span><br><span class="line"></span><br><span class="line">@interface ASTFunctionCallNode: ASTNode</span><br><span class="line">@property (nonatomic, strong) ASTNode *caller;</span><br><span class="line">@property (nonatomic, strong) NSMutableArray *args;</span><br><span class="line">@end</span><br></pre></td></tr></table></figure>
+<p>最终 <strong>parser.y</strong> 中的部分代码如下，<strong>globalAst</strong> 为一个全局的语法树变量:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">door:</span><br><span class="line">statement_list</span><br><span class="line">&#123;</span><br><span class="line">    globalAst.nodes = $1;</span><br><span class="line">&#125;</span><br><span class="line">;</span><br><span class="line">statement_list:</span><br><span class="line">&#123;</span><br><span class="line">    __autoreleasing id value = [NSMutableArray array];</span><br><span class="line">    $$ = value;</span><br><span class="line">&#125;</span><br><span class="line">| statement_list statement</span><br><span class="line">&#123;</span><br><span class="line">    [$1 addObject: $2];</span><br><span class="line">    $$ = $1;</span><br><span class="line">&#125;</span><br><span class="line">;</span><br><span class="line">.......</span><br></pre></td></tr></table></figure>
+<p>关于在 <strong>.l</strong> 和 <strong>.y</strong>中书写代码不方便的问题，可以在 vscode 中安装 flex 和 bsion 的相关插件，有了代码提示，体验会好很多很多。</p>
+<h5 id="单元测试"><a href="#单元测试" class="headerlink" title="单元测试"></a>单元测试</h5><blockquote>
+<p>为什么会在这儿提到单元测试呢？</p>
+<p>oc2mango 以及 OCRunner 能够开发出来，单元测试有超大功劳。</p>
+<p>针对 oc2mango 方面，随着项目的发展，越来越多的语法需要支持，当你在修改语法分析器的时候，稍有一个不慎，就极有可能导致已经支持的语法变成不支持，没有单元测试的话，后续的开发几乎就寸步难行了。现在反思一下，每留下一个爆红的测试示例，有时也像一个一个挑战，等着你去征服他们，绿了以后感觉贼爽。</p>
+</blockquote>
+<p>之前我们一直没有提到单元测试，但在目前这个阶段，我们已经可以愉快的使用单元测试了（其实我们在最开始的时候就应该使用的😂，篇幅有限啊）。</p>
+<p>目前我们的单元测试目标很明确：检验生成的语法树是否正确。</p>
+<p>那我们的输入-&gt;输出的概念应该为：源码-&gt;语法树-&gt;单元测试-&gt;是否正确。</p>
+<p>之前的代码，我们是无法通过 [SingleEngine run:] 得到语法树的，因此我们在SingleEngine中添加了一个 <strong>+ (AST <em>)parse: (NSString </em>)source</strong>的类方法，用于完成：源码-&gt;语法树。</p>
+<p>为了方便单元测试，也在 SingleEngine 中特意添加了一个 parserError 用于最基础的语法测试判断。</p>
+<p>当你打算尝试加入一个新的语法时，你可以写一个最简单的关于 parserError 的单元测试，亮一个红灯。</p>
+<p>示例：SimpleOCRunnerDemoTests.m 中的 testExample 代码:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">- (void)testExample &#123;</span><br><span class="line">    NSString *source =</span><br><span class="line">    @&quot;int a = 1;&quot;</span><br><span class="line">    &quot;double b = 1.0;&quot;;</span><br><span class="line">    AST *ast = [SingleEngine parse:source];</span><br><span class="line">    XCTAssert(parserError == nil, @&quot;error: %@&quot;, parserError);</span><br><span class="line">    ASTInitDeclareNode *node1 = (ASTInitDeclareNode *)ast.nodes.firstObject;</span><br><span class="line">    XCTAssert([node1 isKindOfClass:[ASTInitDeclareNode class]]);</span><br><span class="line">    XCTAssert([node1.declare.varname isEqual:@&quot;a&quot;]);</span><br><span class="line">    XCTAssert(node1.declare.type != nil);</span><br><span class="line">    XCTAssert(node1.declare.type.type == ASTSpecifierTypeInt);</span><br><span class="line">    XCTAssert([node1.expression isKindOfClass:[ASTValueNode class]]);</span><br><span class="line">    XCTAssert([(ASTValueNode *)node1.expression value].intValue == 1);</span><br><span class="line">    </span><br><span class="line">    ASTInitDeclareNode *node2 = (ASTInitDeclareNode *)ast.nodes.lastObject;</span><br><span class="line">    XCTAssert([node2 isKindOfClass:[ASTInitDeclareNode class]]);</span><br><span class="line">    XCTAssert([node2.declare.varname isEqual:@&quot;b&quot;]);</span><br><span class="line">    XCTAssert(node2.declare.type != nil);</span><br><span class="line">    XCTAssert(node2.declare.type.type == ASTSpecifierTypeDouble);</span><br><span class="line">    XCTAssert([node2.expression isKindOfClass:[ASTValueNode class]]);</span><br><span class="line">    XCTAssert([(ASTValueNode *)node2.expression value].doubleValue == 1.0);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>本小节相关代码位于 <a href="https://github.com/SilverFruity/SimpleOCRunnerDemo/commit/4f27bd65488a2cf9b669b1047ab242b2f8a5999d" target="_blank" rel="noopener">Section: 生成语法树</a>.</p>
+<h4 id="执行语法树"><a href="#执行语法树" class="headerlink" title="执行语法树"></a>执行语法树</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> d = <span class="number">2</span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> arg0, <span class="keyword">double</span> arg1)</span></span>&#123;  </span><br><span class="line">  <span class="keyword">return</span> arg0 + arg1 + d;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">int</span> a = <span class="number">1</span>;</span><br><span class="line"><span class="keyword">double</span> b = <span class="number">2.0</span>;</span><br><span class="line"><span class="keyword">int</span> c = add(a, b);</span><br></pre></td></tr></table></figure>
+<p>在开始正文以前，我们先思考几个问题：</p>
+<ol>
+<li><code>int a = 1;</code>，关于 a 的值，应如何存储，并且在后续的计算中还能获取到 a 的值？</li>
+<li><code>int a = 1; double b = 1.0; int c = a + b;</code>，关于这里，在计算 c 时，a 和 b 的值，如何才能获取到，并且 a、b 的值是两个不同的类型，如何让他们以自己的类型进行计算，并且最终的值被强转为int？</li>
+<li><code>add(a , b);</code> 函数调用时，参数如何传递？</li>
+<li>在 <code>add</code> 函数的调用中，<strong>d</strong> 的值如何获取？</li>
+<li>如何兼容的 Objective-C 的 <a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html" target="_blank" rel="noopener">TypeEncode</a>？</li>
+</ol>
+<p>现在有几个概念需要讲一下了。</p>
+<h5 id="作用域（EvalScope）"><a href="#作用域（EvalScope）" class="headerlink" title="作用域（EvalScope）"></a>作用域（EvalScope）</h5><p><code>{ }</code>就可视为一个作用域，EvalScope 主要由一个 NSMuatbleDictionary 和一个父作用域的引用组成。</p>
+<p>它的作用主要是：</p>
+<p>1.存储在当前作用域中声明的变量的值，比如: <code>int a = 1</code>，EvalScope[“a”] = ORValue(1)。当 <code>int b = a</code> 这种情况时，则会去 EvalScope 查找 ‘a’ 变量的值，然后再注册一个 ‘b’ 的变量。</p>
+<p>2.父作用域的引用主要用于跨域操作时，跨域变量查找以及修改。我们的例子中，也出现了这种情况。</p>
+<h5 id="中间值（ORValue）"><a href="#中间值（ORValue）" class="headerlink" title="中间值（ORValue）"></a>中间值（ORValue）</h5><p>站在作用域的基础之上，在字典中保存的值，需要是一个对象。</p>
+<p>尽管目前我们只需要处理 int 和 double 类型的值，但随着类型的增加，需要一个类来封装类型处理的相关逻辑以及值在内存中的存储的。</p>
+<p>为了兼容 Objective-C 的 TypeEncode，在类中，添加一个 typeEncode 的属性，以做到：ORValue = 值 + TypeEncode 的组合。</p>
+<p>同时，为了能够控制当前的执行状态，拥有一个 controlState 属性，用于在代码中实现 return 、continue、break。</p>
+<h5 id="全局函数表（FunctionTable）"><a href="#全局函数表（FunctionTable）" class="headerlink" title="全局函数表（FunctionTable）"></a>全局函数表（FunctionTable）</h5><p>为了全局函数能够正常调用，比如通过 <code>add(1, 0)</code> 的形式，即可调用add函数的实现。因此我们实现了一个单例主要用于存储 <strong>[String : ASTFunctionImpNode]</strong> 的字典。</p>
+<p>关于 <strong>ASTFunctionImpNode</strong> 的注册和执行的问题：</p>
+<p>当遍历 execute 语法树时，此时为第一次调用 ASTFunctionImpNode.execute ，这个时候会向全局函数表进行注册，此时 EvalArgsStack 中的元素的个数必定为0。所有的函数和方法调用的时候，此时 EvalArgsStack 的元素的个数必定 &gt;= 1，因此除了第一次注册执行以外，此后 ASTFunctionImpNode 所有的 execute，都进行解释执行操作。</p>
+<h5 id="函数参数栈（EvalArgsStack）"><a href="#函数参数栈（EvalArgsStack）" class="headerlink" title="函数参数栈（EvalArgsStack）"></a>函数参数栈（EvalArgsStack）</h5><p>它其实很简单。在函数调用前，先将所有的参数按照顺序组成一个数组压入栈中，函数执行时，从栈顶取出数组，随后注册到函数作用域中，当函数执行完成后，再将参数数组出栈。</p>
+<p>当函数执行时，是如何获取到他们的值的呢？</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">//我们再回顾一下 函数声明的结构</span><br><span class="line">@interface ASTFunctionDeclareNode: ASTNode</span><br><span class="line">@property (nonatomic, strong) ASTDeclareNode *declare;</span><br><span class="line">@property (nonatomic, strong) NSMutableArray &lt;ASTDeclareNode *&gt;*argDeclares;</span><br><span class="line">@end</span><br></pre></td></tr></table></figure>
+<p>已知 <code>int add(int arg0, double arg1){ }</code> 我们调用<code>add(1, 0);</code>。</p>
+<p>首先，我们使用 ‘add’ 在 FunctionTable 中查找到 <code>add</code> 函数的实现（ASTFunctionImpNode）。</p>
+<p>调用函数实现前，先执行<code>[EvalArgsStack.push:@[ORValue(1), ORValue(0)]]</code>。</p>
+<p>最终 ASTFunctionImpNode.exexcute 时，向作用域中注册参数变量的逻辑如下：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NSArray</span> *args = [EvalArgsStack top];</span><br><span class="line"><span class="built_in">NSArray</span> *declares = <span class="keyword">self</span>.declare.argDeclares;</span><br><span class="line">functionSubScope[declares[<span class="number">0</span>].varname] = args[<span class="number">0</span>]; <span class="comment">//functionSubScope["arg0"] = args[0];</span></span><br><span class="line">functionSubScope[declares[<span class="number">1</span>].varname] = args[<span class="number">1</span>]; <span class="comment">//functionSubScope["arg1"] = args[1];</span></span><br></pre></td></tr></table></figure>
+<p>关于最终代码运行的逻辑如下:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> d = <span class="number">2</span>;  <span class="comment">// TopScope[“d”] = ORValue(2);</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> arg0, <span class="keyword">double</span> arg1)</span></span>&#123; </span><br><span class="line">    <span class="comment">// ASTFunctionImpNode.exexcute(SubScope) -&gt; ORValue:</span></span><br><span class="line">    <span class="comment">// list&lt;ORValue&gt; = ArgsStack.last</span></span><br><span class="line">    <span class="comment">// SubScope[“arg0”] = list[0] = ORValue(1)</span></span><br><span class="line">    <span class="comment">// SubScope[“arg1”] = lsit[1] = ORValue(2.0)</span></span><br><span class="line">    <span class="comment">// d = SubScope-&gt;superScope[“d”] = TopScope[“d”] = ORValue(2)</span></span><br><span class="line">    <span class="comment">// return ORValue(1) + ORValue(2.0) + ORValue(2)</span></span><br><span class="line">    <span class="keyword">return</span> arg0 + arg1 + d;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">int</span> a = <span class="number">1</span>; <span class="comment">// TopScope[“a”] = ORValue(1);</span></span><br><span class="line"><span class="keyword">double</span> b = <span class="number">2.0</span>; <span class="comment">// TopScope[“b”] = ORValue(2.0);</span></span><br><span class="line"><span class="keyword">int</span> c = add(a, b);</span><br><span class="line"><span class="comment">// ASTFunctionImpNode = GlobalFunctionTable[“add”]</span></span><br><span class="line"><span class="comment">// ArgsStack.push([a, b])</span></span><br><span class="line"><span class="comment">// SubScope-&gt;superScope = TopScope</span></span><br><span class="line"><span class="comment">// TopScope[“c”] = ASTFunctionImpNode.exexcute(SubScope)</span></span><br><span class="line"><span class="comment">// ArgsStack.pop()</span></span><br></pre></td></tr></table></figure>
+<img src="/2021/03/09/OCRunner-SimpleOCRunner/OCRunnerExecute.png">
+<p>本小节相关代码位于<a href="https://github.com/SilverFruity/SimpleOCRunnerDemo/commit/33e2358c4e06baa1f35d4309b76f376a753f58fc" target="_blank" rel="noopener">Section: 执行语法树</a>.</p>
+<p>在这个简单的 demo 里面，许多功能都还未完成：操作符、基本类型转换、指针、方法替换、控制语句、结构体等等，但我希望能够让小伙伴们对语法树解释执行有一个基本的了解。针对未实现的功能，想深入的人，完全可以通过修改 demo，完成以上功能，疑惑的地方，可以查看 OCRunner 的源码。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+      <div>
+        <ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者：</strong>
+    Jiang
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://silverfruity.github.io/2021/03/09/OCRunner-SimpleOCRunner/" title="OCRunner-实现一个简单版 OCRunner">https://silverfruity.github.io/2021/03/09/OCRunner-SimpleOCRunner/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>
+    本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/" rel="external nofollow" target="_blank">CC BY-NC-SA 3.0</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+
+      </div>
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/hotfix/" rel="tag"># hotfix</a>
+          
+            <a href="/tags/iOS/" rel="tag"># iOS</a>
+          
+            <a href="/tags/Objective-C/" rel="tag"># Objective-C</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/03/09/OCRunner-StartCodingHotFix/" rel="next" title="OCRunner-从零教你写一个 iOS 热修复框架">
+                <i class="fa fa-chevron-left"></i> OCRunner-从零教你写一个 iOS 热修复框架
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/03/09/OCRunner-PatchFile/" rel="prev" title="OCRunner - 二进制补丁文件的实现">
+                OCRunner - 二进制补丁文件的实现 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.png" alt="Jiang">
+            
+              <p class="site-author-name" itemprop="name">Jiang</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#词法分析器"><span class="nav-number">1.</span> <span class="nav-text">词法分析器</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Flex语法简单简介"><span class="nav-number">1.1.</span> <span class="nav-text">Flex语法简单简介</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#语法分析器"><span class="nav-number">2.</span> <span class="nav-text">语法分析器</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Yacc语法简单介绍"><span class="nav-number">2.1.</span> <span class="nav-text">Yacc语法简单介绍</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#生成语法树"><span class="nav-number">3.</span> <span class="nav-text">生成语法树</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#单元测试"><span class="nav-number">3.1.</span> <span class="nav-text">单元测试</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#执行语法树"><span class="nav-number">4.</span> <span class="nav-text">执行语法树</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#作用域（EvalScope）"><span class="nav-number">4.1.</span> <span class="nav-text">作用域（EvalScope）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#中间值（ORValue）"><span class="nav-number">4.2.</span> <span class="nav-text">中间值（ORValue）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#全局函数表（FunctionTable）"><span class="nav-number">4.3.</span> <span class="nav-text">全局函数表（FunctionTable）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#函数参数栈（EvalArgsStack）"><span class="nav-number">4.4.</span> <span class="nav-text">函数参数栈（EvalArgsStack）</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2019 &mdash; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jiang</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: false,
+        notify: false,
+        appId: 'VS3cQiJ0SvKu8yffcUhucXVa-gzGzoHsz',
+        appKey: '7IsQXOyh5G5NhvJGb0gCQvtl',
+        placeholder: 'Emmm.',
+        avatar:'monsterid',
+        meta:guest,
+        pageSize:'10' || 10,
+        visitor: true
+    });
+  </script>
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
